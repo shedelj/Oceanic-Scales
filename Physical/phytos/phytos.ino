@@ -1,20 +1,4 @@
-/*
- * An Arduino controller for LED strings based on the SM16716 controller.
- *
- * By Mike Tsao (github.com/sowbug). Copyright 2012, all rights reserved.
- *
- * You might see these being sold as WS2801 strands, and you're wondering why
- * your off-the-shelf WS2801 code isn't working. This sketch will restore
- * your confidence that your lights aren't broken.
- *
- * This code isn't the fastest, but it is just about the simplest you'll
- * find. For performance, inv estigate code that uses hardware SPI.
- *
- * Beware that everyone seems to use different wiring color schemes. I
- * found the order of the wires is more reliable. Looking at the IC side
- * of the board, you'll find from left to right: V+, Data, Clock, Ground.
- */
- 
+#include <EasyTransfer.h>
 
 #include <Adafruit_WS2801.h>
 #include "SPI.h"
@@ -27,647 +11,927 @@
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
 
+#define WINDOW_X (26)
+#define WINDOW_Y (48)
+
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
 uint32_t pixels[LIGHT_COUNT];
+EasyTransfer ET; 
+
+struct RECEIVE_DATA_STRUCTURE{
+  //put your variable definitions here for the data you want to receive
+  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
+  uint8_t state;
+//  int nitrogen;
+//  int ph;
+//  int temperature;
+  uint8_t nitrogen;
+  uint8_t ph;
+  uint8_t temperature;
+
+};
+
+RECEIVE_DATA_STRUCTURE mydata;
+
 
 struct led
 {
   int x;
   int y;
-  //char r;
-  //char g;
-  //char b;
-  char id;
   char type;
+  uint8_t id;
 };
 
-//#define pinModeFast(x, y) pinMode(x, y)
-//#define digitalWriteFast(x, y) digitalWrite(x, y)
-//SerialCommand SCmd;   // The demo SerialCommand object
-
-//pseudo led class field values
-/*
-enum fields{
-  X,
-  Y,
-  R,
-  G,
-  B,
-  T   //0 for plankton, 1 for element
-};
-*/
 //state values
+//0 - Rest
+//1 - Game
+//2 - Sleep
+//3 - Calibrate
+//4 - Pulldown
+//5 - Display_Paramaters
+
 enum states{
   RESTING,
-  GAME,
-  CALIBRATE
+  GAME,   
+  SLEEP,
+  CALIBRATE,
+  PULLDOWN,
+  DISPLAY_PARAMETERS
 };
 
 enum types{
-  PHYTOS,
-  CHEMS 
+  PLANKTON,
+  TEMPERATURE,
+  PH,
+  NITROGEN
 };
 
-float windowY = 48;
-float windowX = 26;
 
-char sb [SB_BUFFER_SIZE]; //sb = serialbuffer
-int sbpos = 0;
-
-int state = 0;
 
 led leds [LIGHT_COUNT];
-int top = -1;
-int buffer [LIGHT_COUNT];
 
-int nitrogen = 0;
-int ph = 0;
-int temperature = 0;
+
+//uint8_t state = 0;
+//uint8_t nitrogen = 80;
+//uint8_t ph = 80;
+//uint8_t temperature = 80;
 
 int TIME = 0;
+//start without winning or losing
+boolean winning = false; 
+boolean losing = false;
 
 void setup() {
   
   Serial.begin(9600);
 
-  //int leds[LIGHT_COUNT]; // (x,y,r,g,b)
+  //initialize LEDS
   init_leds();
-      
-//  Serial.write("Set up!!!");
-  //pinModeFast(DATA_PIN, OUTPUT);
-  //pinModeFast(CLOCK_PIN, OUTPUT);
-  //digitalWriteFast(DATA_PIN, LOW);
-  //digitalWriteFast(CLOCK_PIN, LOW);
-  Serial.println("Ready"); 
-  
-  strip.begin();
 
-  // Update LED contents, to start they are all 'off'
+  Serial.println("Ready"); 
+
+  strip.begin();
   strip.show();
 
+  //sets up easytransfer for mydata and the serial port address
+  ET.begin(details(mydata), &Serial);
 }
 
+
+//---------------------------------
+// Main Body
+//---------------------------------
 
 void loop() {
-  //delay(1000);
-  //Serial.println("hello");
-  readNextCommand();
-  Serial.println(state);
-  TIME = millis(); //will be changed to take time from dispatch arduino
-  switch(state)
+  //readNextCommand();
+  //human_input();
+  //solid();
+  //  Serial.print("state = ");
+  //  Serial.println(state);
+  //sampleEncoder();
+  //  if(ET.receiveData()) Serial.println("Yeah");
+
+  //recieve data from mega
+  ET.receiveData();
+
+
+  mydata.state = GAME;
+  switch(mydata.state)
   {
-    case RESTING: solid(CHEMS);
-                  solid(PHYTOS);
-                  break;
-    case    GAME: game(nitrogen, ph, temperature);
-                  break;
-    case CALIBRATE: calibrate();
-                  break;
-    default     : tyker(PHYTOS);
-                  tyker(CHEMS);
+    case RESTING:   
+      solid();
+      break;
+    case GAME     : 
+      game();
+      break;
+    case SLEEP    : 
+      break;
+    case CALIBRATE: 
+      calibrate();
+      break;
+    case PULLDOWN : 
+      //victory();
+      break;
+    /*case DISPLAY_PARAMETERS  : 
+      display_paramaters();
+      break;
+    */
+    default       : 
+      solid();
+      break;
   }
-  
-  /*
-  while(!isEmpty())
-  {
-     //int popped = pop();
-     //set_pixel_rgb(popped, leds[popped][B], leds[popped][G], leds[popped][R]);
-     //strip.setPixelColor(popped, leds[popped].r, leds[popped].g, leds[popped].b);
-  }
-  */
-  //show();
-  //Serial.println("showing");
   strip.show();
 }
 
-void game(int nitrogen, int ph, int temperature)
+/*
+void display_paramaters()
 {
-   for(int i = 0; i < LIGHT_COUNT; ++i)
-   {
-      //temperature_control(i, temperature);
+  for(int i = 0; i < LIGHT_COUNT; ++i)
+  {
+    strip.setPixelColor(i, mydata.temperature, mydata.nitrogen, mydata.ph);
+  } 
+}
+*/
+
+
+
+//void game2() {
+//   for (int i=0; i < strip.numPixels(); i++) {
+//      strip.setPixelColor(i, 255, 0, 0);
+//      strip.show();
+////      delay(10);
+//  }
+//}
+
+
+int rgbShiftCalc (int next, int current, int sep){
+  int value1;
+  value1 = (((next - current)/sep)*mydata.nitrogen + current); 
+  return (int) value1;
+};
+
+
+void nitroColor(int i){
+   int r=0;
+   int b=0;
+   int g=0;
+   int nitro = mydata.nitrogen;
+   if (nitro < 37){
+     r = rgbShiftCalc(144,96,38);
+     g =  rgbShiftCalc(56,62,38);
+     b = rgbShiftCalc(238,66,38);
    }
+   else if (nitro < 74){
+     r = rgbShiftCalc(238,144,38);
+     g =  rgbShiftCalc(66,62,38);
+     b = rgbShiftCalc(39,31,38);
+   }
+   else if (nitro < 111){
+     r = rgbShiftCalc(240,238,38);
+     g =  rgbShiftCalc(90,66,38);
+     b = rgbShiftCalc(40,39,38);
+   }
+   else if (nitro < 148){
+     r = rgbShiftCalc(247,240,38);
+     g =  rgbShiftCalc(147,90,38);
+     b = rgbShiftCalc(29,40,38);
+   }
+   else if (nitro < 185){
+     r = rgbShiftCalc(255,247,38);
+     g =  rgbShiftCalc(221,147,38);
+     b = rgbShiftCalc(22,29,38);
+   }
+   else if (nitro < 222){
+     r = rgbShiftCalc(0,255,38);
+     g =  rgbShiftCalc(165,221,38);
+     b = rgbShiftCalc(80,22,38);
+   }
+   
+//        96,62,66   
+//        144,62,31
+//        238,66,39
+//        240,90,40
+//        247,147,29
+//        255,221,22
+//        0,165,80
+  strip.setPixelColor(i, r, g, b);
+};
+
+float control = 0; 
+//basically, victorycontrol determines how long the victory state displays
+float victorycontrol = .00;
+//t controls sine wave (it is the x)
+float t = 0;
+
+void game()
+{
+  
+  
+//  Serial.print("nitrogen = ");
+//  Serial.println(mydata.nitrogen);
+//  Serial.print("temperature = ");
+//  Serial.println(mydata.temperature);
+//  Serial.print("ph = ");
+//  Serial.println(mydata.ph);
+  //balance - this basically determines what state we go into
+  // balance < 25 -> win
+  // balance > 300 -> loing
+  int balance = abs(mydata.temperature - 127) + abs(mydata.ph - 127)  + abs(mydata.nitrogen -127);
+  
+  
+  //incriments (speed of blink) depending on how in/out of balance
+  //this makes the LEDs speed up in the regular game (blinky blink)
+  control = control + (( (float) balance) / (float) 4000);
+  
+  //should not be greater than 1
+  if(control >= 1) control = control - 1;
+
+  if(balance < 30) winning = true;
+//  if(balance > 300) losing = true;
+
+//  if (balance < 30)
+//  {
+//      t += (PI / 64); //+ victorycontrol;  
+//      if (t >= TWO_PI) t = t - TWO_PI;
+//      victorycontrol += .005;
+//
+//  }
+  for(int i = 0; i < LIGHT_COUNT; ++i)
+  {
+    //win
+     if(winning) victory(i, t, victorycontrol);
+//    if(balance < 30)
+//    {
+//      victory(i, t, victorycontrol);
+//    }
+    //die
+    //else if(losing) death(i);
+
+    //otherwise, update the LEDs 
+    else
+    {
+      switch(leds[i].type)
+      {
+        case TEMPERATURE:
+          //value between RED and BLUE
+          strip.setPixelColor(i, mydata.temperature, 15 , 255- mydata.temperature);
+          break;
+        case PH:
+          //value between BLUE and GREEN
+          strip.setPixelColor(i, 15, 255 - mydata.ph, mydata.ph);
+          break;
+        case NITROGEN: 
+//          if (mydata.nitrogen <  127) strip.setPixelColor(i, (mydata.nitrogen * 2) , 0, 5);
+//          else strip.setPixelColor(i, 255 - (mydata.nitrogen - 127) * 2, (mydata.nitrogen - 127)* 2, 5);
+        //  strip.setPixelColor(i,255 -  mydata.nitrogen, ((mydata.nitrogen+ 1) / .6667 + 83) , 5);
+            strip.setPixelColor(i,255 -  mydata.nitrogen, mydata.nitrogen / 2 + 127 , 5);
+
+          break;
+        //otherwise, update plankton LEDs
+        default: 
+          game_plankton(i, control);
+          break;
+      }
+      //if (victorycontrol > 0) victorycontrol -= .005;
+    }
+  }
+
+  if(winning)
+  {
+    t += (PI / 128) + victorycontrol;  
+    if(victorycontrol >= 1) 
+      {
+        victorycontrol = 0;
+        t = 0;
+        winning =  false; 
+      }
+    victorycontrol += .003;
+  }
+
+//  if(losing)
+//
+//  {
+//    if (movingY < 0) {
+//       movingY = 48;
+//    }
+//
+//    dcontrol += 0.1;
+//
+//    if(movingX >= WINDOW_X) {
+//       dcontrol = 0;
+//       losing = false;
+//    }
+//    
+//  }
+//
 }
 
+
+//death variables
+float dcontrol = 0;
+float drate = 30;
+uint8_t dbrightness = 0;
+
+void death(int i) {
+    //moving X moves a "line" across the X axis at the rate determined by dcontrol
+    float movingX = dcontrol*(WINDOW_X/2);
+    //moving Y moves a "line" down the y axis by doing some trig (based on dcontrol and drate (angle))
+    float movingY = (WINDOW_Y - (abs((dcontrol*(WINDOW_X)/2)*tan(drate))));
+      //brightness is determined by how far away y is multiplied by the movingY rate
+      dbrightness = (uint8_t) 48+((WINDOW_Y - leds[i].y)*(movingY));
+      if (leds[i].x < movingX) {
+        strip.setPixelColor(i, dbrightness, dbrightness, 0);
+      }
+}
+
+//
+// void temp_control(int i)
+// {
+//  uint32_t x = strip.getPixelColor(i);
+//  uint8_t oldb = x & 0xff;
+//  uint8_t oldg = (x >> 8) & 0xff;
+//  uint8_t oldr = (x >> 16) & 0xff;
+//  uint8_t bleh = x >> 24;
+//  
+//  strip.setPixelColor(i, temperature, 15 , 255-temperature);
+//  uint8_t r = temperature;
+//  uint8_t g = 15;
+//  uint8_t b = 255-temperature;
+//  
+//  float weightedr = r * (1 - victorycontrol) + oldr * victorycontrol;
+//  float weightedg = g * (1 - victorycontrol) + oldg * victorycontrol;
+//  float weightedb = b * (1 - victorycontrol) + oldb * victorycontrol;
+//  strip.setPixelColor(i, weightedr, weightedg, weightedb);
+//
+//  
+//    //strip.setPixelColor(i, value, value, value);
+//
+// }
+// 
+
+void game_plankton(int index, float control)
+{
+  //delay(50);
+  //Serial.println(control);
+  //Serial.println(balance);
+  uint8_t value;
+  switch(index % 5)
+  {
+    case 0: 
+      value = 127 + (int) (127 * sin(TWO_PI * control));
+      break;
+    case 1: 
+      value = 127 + (int) (127 * sin(TWO_PI * (control + .2)));
+      break;
+    case 2: 
+      value = 127 + (int) (127 * sin(TWO_PI * (control + .4)));
+      //leds[i].vibration = sin(TWO_PI * (float) ((counter + 160) % 400) / 400) + 1;
+      break;
+    case 3: 
+      value = 127 + (int) (127 * sin(TWO_PI * (control + .6)));
+      break;
+    case 4: 
+      value = 127 + (int) (127 * sin(TWO_PI * (control + .8)));
+      break;
+  }
+
+//  uint32_t x = strip.getPixelColor(index);
+//  uint8_t oldb = x & 0xff;
+//  uint8_t oldg = (x >> 8) & 0xff;
+//  uint8_t oldr = (x >> 16) & 0xff;
+//  uint8_t bleh = x >> 24;
+////  
+//    uint8_t newr = oldr * (victorycontrol) + value * (1-victorycontrol);
+//    uint8_t newg = oldg * (victorycontrol) + value * (1-victorycontrol);
+//    uint8_t newb = oldb * (victorycontrol) + value * (1-victorycontrol);
+//
+//    strip.setPixelColor(index, newr, newg, newb);
+  strip.setPixelColor(index, value, value, value);
+}
+
+//uint8_t average_value(uint8_t v1, uint8_t v2)
+//{
+//  uint32_t x = strip.getPixelColor(i);
+//  uint8_t oldb = x & 0xff;
+//  uint8_t oldg = (x >> 8) & 0xff;
+//  uint8_t oldr = (x >> 16) & 0xff;
+//  uint8_t bleh = x >> 24;
+//  
+//  return oldg * (1 - victorycontrol) + brightness * victorycontrol;
+//
+//
+//}
+
+//wipe LEDs blank
 void wipe()
 {
   for(int i = 0; i < LIGHT_COUNT; ++i)
   {
-   strip.setPixelColor(i, 0, 0, 0); 
+    strip.setPixelColor(i, 0, 0, 0); 
   }
 }
 
 //shows BLUE
-void solid(int type)
+void solid()
 {
+  //wipe();
+  for(int i = 0; i < LIGHT_COUNT; ++i)
+  {
+    switch(mydata.state)
+    {
+    case 0: 
+      strip.setPixelColor(i, 255, 0, 0);
+      break;
+    case 1: 
+      strip.setPixelColor(i, 0, 255, 0);
+      break;
+    case 2: 
+      strip.setPixelColor(i, 0, 0, 255);
+      break;
+    case 3: 
+      strip.setPixelColor(i, 255, 255, 0);
+      break;
+    case 4: 
+      strip.setPixelColor(i, 255, 0, 255);
+      break;
+    case 5: 
+      strip.setPixelColor(i, 0, 255, 255);
+      break;
+    default: 
+      strip.setPixelColor(i, 255, 255, 255);
+    }
+  }
+}
+
+//nitrogen: brown orange yellow green
+//temperature: red purple blue
+//ph: yellowish green aquamarine cyan blue
+
+boolean victory(int index, float t, float victorycontrol)
+{
+  uint32_t pixelColor = strip.getPixelColor(index);
+  uint8_t oldb = pixelColor & 0xff;
+  uint8_t oldg = (pixelColor >> 8) & 0xff;
+  uint8_t oldr = (pixelColor >> 16) & 0xff;
+  //uint8_t bleh = pixelColor >> 24;
   
-   for(int i = 0; i < LIGHT_COUNT; ++i)
-   {
-     //if(leds[i][X] == 0 || leds[i][T] != type) continue;
-     //leds[i].r = 0;
-     //leds[i].g = 0;
-     //leds[i].b = 255;
-     //push(i);
-     strip.setPixelColor(i, 0, 0, 255);
-   }
-   
+  //return oldg * (1 - victorycontrol) + brightness * victorycontrol;
+
+  float d = ((float) leds[index].y / (float) (WINDOW_Y * 2) ) * TWO_PI;
+  //brightness level based on the difference of the (x) of sin(x) and d
+  float level = cos(t - d) + 1;
+  uint8_t brightness = (uint8_t) (level * 127);
+  //    int weightedbrightness =(int) brightness - ((int) 256 - (int) brightness);
+  //    if (weightedbrightness < 0) brightness = 0;
+  //    else brightness = (uint8_t) weightedbrightness;
+  //Serial.println(oldr * (1 - victorycontrol));
+  float weightedr = oldr * (1 - victorycontrol) + brightness * victorycontrol;
+  float weightedg = oldg * (1 - victorycontrol) + brightness * victorycontrol;
+  float weightedb = oldb * (1 - victorycontrol) + brightness * victorycontrol;
+  strip.setPixelColor(index, weightedr, weightedg, weightedb);
+  //strip.setPixelColor(i, brightness, brightness, brightness);
+
 }
 
-//float counter = (millis() / 5000) % 400;
-void tyker(int type)
-{      
-     delay(10);
-     float control =  (TIME / 2000.0) ;
-     float center = sin((PI / 2) * control) * windowY * 2 - (windowY / 2);
-     for(int i = 0; i < LIGHT_COUNT; ++i)
-     {
-        if (leds[i].y == 0 || leds[i].type != type) continue;
-        float distance = abs(leds[i].y - center);
-        //Serial.println(distance);
-        //int v = (int) ((distance / (windowX * 2)) * 255) + (int) (20 * (float) ((i % 7) - 3));
-        int v = (int) ((distance / (windowY * 2)) * 127);
-//       Serial.println(v);
-        //leds[i].r = v;
-        push(i);
-     }
-     
-}
-
-//waves on the beach
-void tyker2(int type)
-{      
-//     Serial.println("Tyker");
-     delay(10);
-     float control =  (TIME / 5000.0) ;
-     //Serial.println(counter);
-     float center = sin(TWO_PI * control) * windowY;
-     //Serial.print("center = ");
-     //Serial.println(center);
-     for(int i = 0; i < LIGHT_COUNT; ++i)
-     {
-        if (leds[i].y == 0 || leds[i].type != type) continue;
-        float distance = abs(leds[i].y - center);
-        //Serial.println(distance);
-        //int v = (int) ((distance / (windowX * 2)) * 255) + (int) (20 * (float) ((i % 7) - 3));
-        int v = (int) ((distance / (windowY * 2)) * 255);
-//       Serial.println(v);
-        //leds[i].r = v;
-        //leds[i].g = v;
-        //leds[i].b = v;
-        //push(i);
-     }
-     
-}
 
 void calibrate(){
   wipe();
   for(int i = 0; i < LIGHT_COUNT; )
   {
-   if(Serial.read() != -1){
-     wipe();
-     strip.setPixelColor(i, 255,255,255);
-     ++i;
-   }
-   strip.show();
-   delay(15); 
+    if(Serial.read() != -1){
+      wipe();
+      strip.setPixelColor(i, 255,255,255);
+      ++i;
+    }
+    strip.show();
+    delay(15); 
   }
   Serial.write("calibration over");
-  state = 0;
+  mydata.state = 0;
 }
 
-////////////////////
-
-/*
-a machine that uses this method will receive serial commands
-in this form, minus the quotation marks.
-    
-  ------number of bytes in this message  
-  | --- device ID number (0 means all, if first character isn't 0 this string
-  | |   is parsed to determine if command is designated for this machine.  
-  | | ---- state ID
-  | | |  ------- additonal arguments (optional, determined by state ID)      
-  | | |  |  |  |           
-"15 0 1 45 36 64"
-
-The individual arguments here are given in order of preference.  If a buffer is
-in danger of overflowing, the byte size allows that machine to trash those
-bytes if it needs to.  This would result in a loss of resolution, but it avoids
-having to develop a handshake system which could be fatally time consuming.  
-
-For questions ask Tyler.
-
-*/
-void readNextCommand_arduino()
-{
- char term = '\n';
- if(Serial.available() == 0) return;
- char msgSize = Serial.read();
- char targetid = Serial.read();
- if(targetid != 0 && !isCommandForMe_arduino()) return;
- state = Serial.read();
- parseExtraArgs_arduino(state);
-}
-
-boolean isCommandForMe_arduino()
-{
- char inByte = Serial.read();
- while(inByte != ':')
- {
-   if (inByte == DEVICE_ID) return true; 
- }
- return false;
-}
-
-void parseExtraArgs_arduino(int state)
-{
-  switch(state)
-  {
-    case GAME: nitrogen = Serial.read();
-               ph = Serial.read();
-               temperature = Serial.read();
-               break;
-    default  : return;
-  } 
-}
-
-void readNextCommand()
-{
-  //Serial.println(sb);
-  char term = '\n';
-  if(Serial.available() > 0)
-  {
-    char inChar = Serial.read();
-    if (inChar == term)
-    {
-      //Serial.println("Received newline");
-      //Serial.println(sb);
-      char* cmdbuf;
-      cmdbuf = strtok(sb, " ");
-      //Serial.println(1);
-      int cmdsize = atoi(cmdbuf);
-      cmdbuf = strtok(NULL, " ");
-      //Serial.println(2);
-      if (!isCommandForMe(cmdbuf)) return;
-      cmdbuf = strtok(NULL, " ");
-      //Serial.println(3);
-      state = atoi(cmdbuf);
-      Serial.print("State =");
-      Serial.println(state);
-      clearsb();
-    }
-    else 
-    {
-     if (sbpos < SB_BUFFER_SIZE)
-     {
-       sb[sbpos++] = inChar;
-       sb[sbpos] = '\0';
-     }
-     else 
-     {
-       Serial.println("Buffer overflow"); 
-     }
-    }
-  }
-}
-
-void clearsb()
-{
-  sb[0] = '\0';
-  sbpos = 0; 
-}
-
-boolean isCommandForMe(char* str)
-{
-  //Serial.print("icfm");
-  //Serial.println(str);
-  if (str[0] == '0') return true; 
-  int i = 0;
-  while(str[i] != NULL)
-  {
-    //Serial.println(str[i]);
-    if(str[i] == DEVICE_ID) return true;
-    ++i; 
-  }
-  return false;
-}
-
-void parseExtraArgs(int state)
-{
-  char* argbuf;
-  switch(state)
-  {
-   case GAME: argbuf = strtok(NULL , " ");
-              nitrogen = atoi(argbuf);
-              argbuf = strtok(NULL, " ");
-              ph = atoi(argbuf);
-              argbuf = strtok(NULL, " ");
-              temperature = atoi(argbuf);
-   default:   return; 
-  }
-  
-}
-
-boolean isEmpty()
-{
-   return top == -1; 
-}
- 
-void push(int led)
-{
-  buffer[++top] = led;
-}
- 
-int pop()
-{
-  return buffer[top--]; 
-}
+//
+//void readNextCommand()
+//{
+//  if(Serial.available() < 5) return;  
+//  Serial.println("reading");
+//
+//  if(Serial.read() != 255)
+//  {
+//    while(Serial.available() > 0)
+//    {
+//      if(Serial.peek() == 255) return;
+//      Serial.read(); 
+//    }
+//  }
+//  //else Serial.read();
+//  //char low = Serial.read();
+//
+//  //char high = Serial.read();
+//  //TIME = high * 256 + low;
+//  mydata.state = Serial.read();
+//  nitrogen = Serial.read();
+//  ph = Serial.read();
+//  temperature = Serial.read();
+//  //  Serial.print("low :");
+//  //  Serial.println(low);
+//  //  Serial.print("High: ");
+//  //  Serial.println(high);
+//  Serial.print("State :");
+//  Serial.println(state);
+//  Serial.print("Nitro: ");
+//  Serial.println(nitrogen);
+//  Serial.print("ph: ");
+//  Serial.println(ph);
+//  Serial.print("temp");
+//  Serial.println(temperature);
+//
+//}
+//
+//void human_input()
+//{
+//  if (Serial.available() < 4) return; 
+//  state = Serial.read() - '0';
+//  nitrogen = (Serial.read() - '0') * 25;
+//  ph = (Serial.read() - '0') * 25;
+//  temperature = (Serial.read() - '0') * 25; 
+//}
 
 void init_leds()
 {
-  
-  
   for(int i = 0; i < LIGHT_COUNT; ++i)
   {
-    
+    leds[i].id = i;
     switch(i){
-      case 0: leds[i].x = 4;
-              leds[i].y = 16;
-              leds[i].id = 0;
-              break;
-      case 1: leds[i].x = 6;
-              leds[i].y = 10;
-              leds[i].id = 1;
-              break;
-      case 2: leds[i].x = 4;
-              leds[i].y = 4;
-              leds[i].id = 2;
-              break;
-      case 3: leds[i].x = 10;
-              leds[i].y = 8;
-              leds[i].id = 3;
-              break;
-      case 4: leds[i].x = 16;
-              leds[i].y = 7;
-              leds[i].id = 4;
-              break;
-      case 5: leds[i].x = 23;
-              leds[i].y = 5;
-              leds[i].id = 5;
-              break;
-      case 6: leds[i].x = 21;
-              leds[i].y = 10;
-              leds[i].id = 6;
-              break;
-      case 7: leds[i].x = 23;
-              leds[i].y = 17;
-              leds[i].id = 7;
-              break;
-      case 8: leds[i].x = 22;
-              leds[i].y = 23;
-              leds[i].id = 8;
-              break; 
-      case 9: leds[i].x = 18;
-              leds[i].y = 29;
-              leds[i].id = 9;
-              break;
-      case 10: leds[i].x = 23;
-               leds[i].y = 39;
-               leds[i].id = 10;
-               break;
-      case 11: leds[i].x = 19;
-               leds[i].y = 36;
-               leds[i].id = 11;
-               break;
-      case 12: leds[i].x = 15;
-               leds[i].y = 34;
-               leds[i].id = 12;
-               break;
-      case 13: leds[i].x = 14;
-               leds[i].y = 31;
-               leds[i].id = 13;
-               break;
-      case 14: leds[i].x = 10;
-               leds[i].y = 33;
-               leds[i].id = 14;
-               break;
-      case 15: leds[i].x = 12;
-               leds[i].y = 38;
-               leds[i].id = 15;
-               break;
-      case 16: leds[i].x = 15;
-               leds[i].y = 45;
-               leds[i].id = 16;
-               break;
-      case 17: leds[i].x = 10;
-               leds[i].y = 43;
-               leds[i].id = 17;
-               break;
-      case 18: leds[i].x = 4;
-               leds[i].y = 39;
-               leds[i].id = 18;
-               break;
-      case 19: leds[i].x = 5;
-               leds[i].y = 32;
-               leds[i].id = 19;
-               break;
-      case 20: leds[i].x = 11;
-               leds[i].y = 25;
-               leds[i].id = 20;
-               break;
-      case 21: leds[i].x = 16;
-               leds[i].y = 20;
-               leds[i].id = 21;
-               break;
-      case 22: leds[i].x = 13;
-               leds[i].y = 17;
-               leds[i].id = 22;
-               break;
-      case 23: leds[i].x = 5;
-               leds[i].y = 23;
-               leds[i].id = 23;
-               break;
-      case 24: leds[i].x = 22;
-               leds[i].y = 10;
-               leds[i].id = 24;
-               break;
-      case 25: leds[i].x = 20;
-               leds[i].y = 14;
-               leds[i].id = 25;
-               break;
-      case 26: leds[i].x = 21;
-               leds[i].y = 18;
-               leds[i].id = 26;
-               break;
-      case 27: leds[i].x = 22;
-               leds[i].y = 23;
-               leds[i].id = 27;
-               break;
-      case 28: leds[i].x = 19;
-               leds[i].y = 27;
-               leds[i].id = 28;
-               break;
-      case 29: leds[i].x = 19;
-               leds[i].y = 32;
-               leds[i].id = 29;
-               break;
-      case 30: leds[i].x = 14;
-               leds[i].y = 35;
-               leds[i].id = 30;
-               break;
-      case 31: leds[i].x = 19;
-               leds[i].y = 39;
-               leds[i].id = 31;
-               break;
-      case 32: leds[i].x = 15;
-               leds[i].y = 42;
-               leds[i].id = 32;
-               break;
-      case 33: leds[i].x = 11;
-               leds[i].y = 44;
-               leds[i].id = 33;
-               break;
-      case 34: leds[i].x = 5;
-               leds[i].y = 38;
-               leds[i].id = 34;
-               break;
-      case 35: leds[i].x = 6;
-               leds[i].y = 33;
-               leds[i].id = 35;
-               break;
-      case 36: leds[i].x = 4;
-               leds[i].y = 27;
-               leds[i].id = 36;
-               break;
-      case 37: leds[i].x = 11;
-               leds[i].y = 28;
-               leds[i].id = 37;
-               break;
-      case 38: leds[i].x = 14;
-               leds[i].y = 24;
-               leds[i].id = 38;
-               break;
-      case 39: leds[i].x = 13;
-               leds[i].y = 19;
-               leds[i].id = 39;
-               break;
-      case 40: leds[i].x = 14;
-               leds[i].y = 13;
-               leds[i].id = 40;
-               break;
-      case 41: leds[i].x = 15;
-               leds[i].y = 7;
-               leds[i].id = 41;
-               break;
-      case 42: leds[i].x = 8;
-               leds[i].y = 6;
-               leds[i].id = 42;
-               break;
-      case 43: leds[i].x = 8;
-               leds[i].y = 3;
-               leds[i].id = 43;
-               break;
-      case 44: leds[i].x = 3;
-               leds[i].y = 8;
-               leds[i].id = 44;
-               break;
-      case 45: leds[i].x = 3;
-               leds[i].y = 16;
-               leds[i].id = 45;
-               break;
-      case 46: leds[i].x = 7;
-               leds[i].y = 19;
-               leds[i].id = 46;
-               break;
-      case 47: leds[i].x = 9;
-               leds[i].y = 14;
-               leds[i].id = 47;
-               break;
-      case 48: leds[i].x = 23;
-               leds[i].y = 26;
-               leds[i].id = 48;
-               break;
-      case 49: leds[i].x = 21;
-               leds[i].y = 32;
-               leds[i].id = 49;
-               break;
-      case 50: leds[i].x = 18;
-               leds[i].y = 37;
-               leds[i].id = 50;
-               break;
+    case 0: 
+      leds[i].x = 4;
+      leds[i].y = 16;
+      leds[i].type = NITROGEN;
+      break;
+    case 1: 
+      leds[i].x = 6;
+      leds[i].y = 10;
+      leds[i].type = PLANKTON;
+      break;
+    case 2: 
+      leds[i].x = 4;
+      leds[i].y = 4;
+      leds[i].type = PH;
+      break;
+    case 3: 
+      leds[i].x = 10;
+      leds[i].y = 8;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 4: 
+      leds[i].x = 16;
+      leds[i].y = 7;
+      leds[i].type = PH;
 
-
+      break;
+    case 5: 
+      leds[i].x = 23;
+      leds[i].y = 5;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 6: 
+      leds[i].x = 21;
+      leds[i].y = 10;
+      leds[i].type = PLANKTON;
+      break;
+    case 7: 
+      leds[i].x = 23;
+      leds[i].y = 17;
+      leds[i].type = NITROGEN;
+      break;
+    case 8: 
+      leds[i].x = 22;
+      leds[i].y = 23;
+      leds[i].type = PH;
+      break; 
+    case 9: 
+      leds[i].x = 18;
+      leds[i].y = 29;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 10: 
+      leds[i].x = 23;
+      leds[i].y = 39;
+      leds[i].type = PH;
+      break;
+    case 11: 
+      leds[i].x = 19;
+      leds[i].y = 36;
+      leds[i].type = PLANKTON;
+      break;
+    case 12: 
+      leds[i].x = 15;
+      leds[i].y = 34;
+      leds[i].type = NITROGEN;
+      break;
+    case 13: 
+      leds[i].x = 14;
+      leds[i].y = 31;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 14: 
+      leds[i].x = 10;
+      leds[i].y = 33;
+      leds[i].type = PLANKTON;
+      break;
+    case 15: 
+      leds[i].x = 12;
+      leds[i].y = 38;
+      leds[i].type = PH;
+      break;
+    case 16: 
+      leds[i].x = 15;
+      leds[i].y = 45;
+      leds[i].type = NITROGEN;
+      break;
+    case 17: 
+      leds[i].x = 10;
+      leds[i].y = 43;
+      leds[i].type = PLANKTON;
+      break;
+    case 18: 
+      leds[i].x = 4;
+      leds[i].y = 39;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 19: 
+      leds[i].x = 5;
+      leds[i].y = 32;
+      leds[i].type = NITROGEN;
+      break;
+    case 20: 
+      leds[i].x = 11;
+      leds[i].y = 25;
+      leds[i].type = NITROGEN;
+      break;
+    case 21: 
+      leds[i].x = 16;
+      leds[i].y = 20;
+      leds[i].type = PLANKTON;
+      break;
+    case 22: 
+      leds[i].x = 13;
+      leds[i].y = 17;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 23: 
+      leds[i].x = 5;
+      leds[i].y = 23;
+      leds[i].type = PH;
+      break;
+    case 24: 
+      leds[i].x = 22;
+      leds[i].y = 10;
+      leds[i].type = PH;
+      break;
+    case 25: 
+      leds[i].x = 20;
+      leds[i].y = 14;
+      leds[i].type = PLANKTON;
+      break;
+    case 26: 
+      leds[i].x = 21;
+      leds[i].y = 18;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 27: 
+      leds[i].x = 22;
+      leds[i].y = 23;
+      leds[i].type = PH;
+      break;
+    case 28: 
+      leds[i].x = 19;
+      leds[i].y = 27;
+      leds[i].type = PLANKTON;
+      break;
+    case 29: 
+      leds[i].x = 19;
+      leds[i].y = 32;
+      leds[i].type = NITROGEN;
+      break;
+    case 30: 
+      leds[i].x = 14;
+      leds[i].y = 35;
+      leds[i].type = PH;
+      break;
+    case 31: 
+      leds[i].x = 19;
+      leds[i].y = 39;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 32: 
+      leds[i].x = 15;
+      leds[i].y = 42;
+      leds[i].type = PLANKTON;
+      break;
+    case 33: 
+      leds[i].x = 11;
+      leds[i].y = 44;
+      leds[i].type = NITROGEN;
+      break;
+    case 34: 
+      leds[i].x = 5;
+      leds[i].y = 38;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 35: 
+      leds[i].x = 6;
+      leds[i].y = 33;
+      leds[i].type = PLANKTON;
+      break;
+    case 36: 
+      leds[i].x = 4;
+      leds[i].y = 27;
+      leds[i].type = PH;
+      break;
+    case 37: 
+      leds[i].x = 11;
+      leds[i].y = 28;
+      leds[i].type = NITROGEN;
+      break;
+    case 38: 
+      leds[i].x = 14;
+      leds[i].y = 24;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 39: 
+      leds[i].x = 13;
+      leds[i].y = 19;
+      leds[i].type = NITROGEN;
+      break;
+    case 40: 
+      leds[i].x = 14;
+      leds[i].y = 13;
+      leds[i].type = NITROGEN;
+      break;
+    case 41: 
+      leds[i].x = 15;
+      leds[i].y = 7;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 42: 
+      leds[i].x = 8;
+      leds[i].y = 6;
+      leds[i].type = PLANKTON;
+      break;
+    case 43: 
+      leds[i].x = 8;
+      leds[i].y = 3;
+      leds[i].type = PH;
+      break;
+    case 44: 
+      leds[i].x = 3;
+      leds[i].y = 8;
+      leds[i].type = NITROGEN;
+      break;
+    case 45: 
+      leds[i].x = 3;
+      leds[i].y = 16;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 46: 
+      leds[i].x = 7;
+      leds[i].y = 19;
+      leds[i].type = PLANKTON;
+      break;
+    case 47: 
+      leds[i].x = 9;
+      leds[i].y = 14;
+      leds[i].type = PH;
+      break;
+    case 48: 
+      leds[i].x = 23;
+      leds[i].y = 26;
+      leds[i].type = PH;
+      break;
+    case 49: 
+      leds[i].x = 21;
+      leds[i].y = 32;
+      leds[i].type = NITROGEN;
+      break;
+    case 50: 
+      leds[i].x = 18;
+      leds[i].y = 37;
+      leds[i].type = PH;
+      break;
+    case 51: 
+      leds[i].x = 12;
+      leds[i].y = 40;
+      leds[i].type = PLANKTON;
+      break;
+    case 52: 
+      leds[i].x = 13;
+      leds[i].y = 44;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 53: 
+      leds[i].x = 7;
+      leds[i].y = 38;
+      leds[i].type = NITROGEN;
+      break;
+    case 54: 
+      leds[i].x = 12;
+      leds[i].y = 32;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 55: 
+      leds[i].x = 6;
+      leds[i].y = 30;
+      leds[i].type = PLANKTON;
+      break;
+    case 56: 
+      leds[i].x = 3;
+      leds[i].y = 26;
+      leds[i].type = PH;
+      break;
+    case 57: 
+      leds[i].x = 9;
+      leds[i].y = 25;
+      leds[i].type = NITROGEN;
+      break;
+    case 58: 
+      leds[i].x = 12;
+      leds[i].y = 19;
+      leds[i].type = PLANKTON;
+      break;
+    case 59: 
+      leds[i].x = 6;
+      leds[i].y = 19;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 60: 
+      leds[i].x = 4;
+      leds[i].y = 14;
+      leds[i].type = NITROGEN;
+      break;
+    case 61: 
+      leds[i].x = 6;
+      leds[i].y = 10;
+      leds[i].type = PLANKTON;
+      break;
+    case 62: 
+      leds[i].x = 4;
+      leds[i].y = 6;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 63: 
+      leds[i].x = 11;
+      leds[i].y = 7;
+      leds[i].type = PH;
+      break;
+    case 64: 
+      leds[i].x = 11;
+      leds[i].y = 14;
+      leds[i].type = NITROGEN;
+      break;
+    case 65: 
+      leds[i].x = 17;
+      leds[i].y = 21;
+      leds[i].type = TEMPERATURE;
+      break;
+    case 66: 
+      leds[i].x = 18;
+      leds[i].y = 28;
+      leds[i].type = PLANKTON;
+      break;
+    case 67: 
+      leds[i].x = 17;
+      leds[i].y = 16;
+      leds[i].type = PH;
+      break;
+    case 68: 
+      leds[i].x = 17;
+      leds[i].y = 5;
+      leds[i].type = PLANKTON;
+      break;
+    case 69: 
+      leds[i].x = 22;
+      leds[i].y = 4;
+      leds[i].type = NITROGEN;
+      break;
+    case 70: 
+      leds[i].x = 22;
+      leds[i].y = 14;
+      leds[i].type = PH;
+      break;
+    default: 
+      break;
     }    
-  //}
-  
-  /*
-  4: 16, 7
-  5: 23, 5
-  6: 21, 10
-  7: 23, 17
-  8: 22, 23
-  9: 18, 29
-  10: 23, 39
-  11: 19, 36
-  12: 15, 34
-  13: 14, 31
-  14: 10, 33
-  15: 12, 38
-  16: 15, 45
-  17: 10, 43
-  18: 4, 39
-  19: 5, 32
-  20: 11, 25
-  21: 16, 20
-  22: 13, 17
-  23: 5, 23
-  24: 22, 10
-  25: 20, 14
-  26: 21, 18
-  27: 22, 23
-  28: 19, 27
-  29: 19, 32
-  30: 14, 35
-  31: 19, 39
-  32: 15, 42
-  33: 11, 44
-  34: 5, 38
-  35: 6, 33
-  36: 4, 27
-  37: 11, 28
-  38: 14, 24
-  39: 13, 19
-  40: 14, 13
-  41: 15, 7
-  42: 8, 6
-  43: 8, 3
-  44: 3, 8
-  45: 3, 16
-  46: 7, 19
-  47: 9, 14
-  48: 23, 26
-  49: 21, 32
-  50: 18, 37
-  51: 12, 40
-  52: 13, 44
-  53: 7, 38
-  54: 12, 32
-  55: 6, 30
-  56: 3, 26
-  57: 9, 25
-  58: 12, 19
-  59: 6, 19
-  60: 4, 14
-  61: 6, 10
-  62: 4, 6
-  63: 11, 7
-  64: 11, 14
-  65: 17, 21
-  66: 18, 28
-  67: 17, 16
-  68: 17, 5
-  69: 22, 4
-  70: 22, 14
-  
-  */
-  
+
+  }
+
 }
+
+
+
+
+
+
+
+
