@@ -376,427 +376,78 @@ void calibrate(){
   mydata.state = 0;
 }
 
-<<<<<<< HEAD
-//
-//void readNextCommand()
-//{
-//  if(Serial.available() < 5) return;  
-//  Serial.println("reading");
-//
-//  if(Serial.read() != 255)
-//  {
-//    while(Serial.available() > 0)
-//    {
-//      if(Serial.peek() == 255) return;
-//      Serial.read(); 
-//    }
-//  }
-//  //else Serial.read();
-//  //char low = Serial.read();
-//
-//  //char high = Serial.read();
-//  //TIME = high * 256 + low;
-//  mydata.state = Serial.read();
-//  nitrogen = Serial.read();
-//  ph = Serial.read();
-//  temperature = Serial.read();
-//  //  Serial.print("low :");
-//  //  Serial.println(low);
-//  //  Serial.print("High: ");
-//  //  Serial.println(high);
-//  Serial.print("State :");
-//  Serial.println(state);
-//  Serial.print("Nitro: ");
-//  Serial.println(nitrogen);
-//  Serial.print("ph: ");
-//  Serial.println(ph);
-//  Serial.print("temp");
-//  Serial.println(temperature);
-//
-//}
-//
-//void human_input()
-//{
-//  if (Serial.available() < 4) return; 
-//  state = Serial.read() - '0';
-//  nitrogen = (Serial.read() - '0') * 25;
-//  ph = (Serial.read() - '0') * 25;
-//  temperature = (Serial.read() - '0') * 25; 
-//}
-
-led leds[70] = {{4, 16 Nitrogen}, }
-=======
->>>>>>> d8b5b1590a9964026b905e736921ca9698741d11
-void init_leds()
-{
-  for(int i = 0; i < LIGHT_COUNT; ++i)
-  {
-    leds[i].id = i;
-    switch(i){
-    case 0: 
-      leds[i].x = 4;
-      leds[i].y = 16;
-      leds[i].type = NITROGEN;
-      break;
-    case 1: 
-      leds[i].x = 6;
-      leds[i].y = 10;
-      leds[i].type = PLANKTON;
-      break;
-    case 2: 
-      leds[i].x = 4;
-      leds[i].y = 4;
-      leds[i].type = PH;
-      break;
-    case 3: 
-      leds[i].x = 10;
-      leds[i].y = 8;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 4: 
-      leds[i].x = 16;
-      leds[i].y = 7;
-      leds[i].type = PH;
-
-      break;
-    case 5: 
-      leds[i].x = 23;
-      leds[i].y = 5;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 6: 
-      leds[i].x = 21;
-      leds[i].y = 10;
-      leds[i].type = PLANKTON;
-      break;
-    case 7: 
-      leds[i].x = 23;
-      leds[i].y = 17;
-      leds[i].type = NITROGEN;
-      break;
-    case 8: 
-      leds[i].x = 22;
-      leds[i].y = 23;
-      leds[i].type = PH;
-      break; 
-    case 9: 
-      leds[i].x = 18;
-      leds[i].y = 29;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 10: 
-      leds[i].x = 23;
-      leds[i].y = 39;
-      leds[i].type = PH;
-      break;
-    case 11: 
-      leds[i].x = 19;
-      leds[i].y = 36;
-      leds[i].type = PLANKTON;
-      break;
-    case 12: 
-      leds[i].x = 15;
-      leds[i].y = 34;
-      leds[i].type = NITROGEN;
-      break;
-    case 13: 
-      leds[i].x = 14;
-      leds[i].y = 31;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 14: 
-      leds[i].x = 10;
-      leds[i].y = 33;
-      leds[i].type = PLANKTON;
-      break;
-    case 15: 
-      leds[i].x = 12;
-      leds[i].y = 38;
-      leds[i].type = PH;
-      break;
-    case 16: 
-      leds[i].x = 15;
-      leds[i].y = 45;
-      leds[i].type = NITROGEN;
-      break;
-    case 17: 
-      leds[i].x = 10;
-      leds[i].y = 43;
-      leds[i].type = PLANKTON;
-      break;
-    case 18: 
-      leds[i].x = 4;
-      leds[i].y = 39;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 19: 
-      leds[i].x = 5;
-      leds[i].y = 32;
-      leds[i].type = NITROGEN;
-      break;
-    case 20: 
-      leds[i].x = 11;
-      leds[i].y = 25;
-      leds[i].type = NITROGEN;
-      break;
-    case 21: 
-      leds[i].x = 16;
-      leds[i].y = 20;
-      leds[i].type = PLANKTON;
-      break;
-    case 22: 
-      leds[i].x = 13;
-      leds[i].y = 17;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 23: 
-      leds[i].x = 5;
-      leds[i].y = 23;
-      leds[i].type = PH;
-      break;
-    case 24: 
-      leds[i].x = 22;
-      leds[i].y = 10;
-      leds[i].type = PH;
-      break;
-    case 25: 
-      leds[i].x = 20;
-      leds[i].y = 14;
-      leds[i].type = PLANKTON;
-      break;
-    case 26: 
-      leds[i].x = 21;
-      leds[i].y = 18;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 27: 
-      leds[i].x = 22;
-      leds[i].y = 23;
-      leds[i].type = PH;
-      break;
-    case 28: 
-      leds[i].x = 19;
-      leds[i].y = 27;
-      leds[i].type = PLANKTON;
-      break;
-    case 29: 
-      leds[i].x = 19;
-      leds[i].y = 32;
-      leds[i].type = NITROGEN;
-      break;
-    case 30: 
-      leds[i].x = 14;
-      leds[i].y = 35;
-      leds[i].type = PH;
-      break;
-    case 31: 
-      leds[i].x = 19;
-      leds[i].y = 39;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 32: 
-      leds[i].x = 15;
-      leds[i].y = 42;
-      leds[i].type = PLANKTON;
-      break;
-    case 33: 
-      leds[i].x = 11;
-      leds[i].y = 44;
-      leds[i].type = NITROGEN;
-      break;
-    case 34: 
-      leds[i].x = 5;
-      leds[i].y = 38;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 35: 
-      leds[i].x = 6;
-      leds[i].y = 33;
-      leds[i].type = PLANKTON;
-      break;
-    case 36: 
-      leds[i].x = 4;
-      leds[i].y = 27;
-      leds[i].type = PH;
-      break;
-    case 37: 
-      leds[i].x = 11;
-      leds[i].y = 28;
-      leds[i].type = NITROGEN;
-      break;
-    case 38: 
-      leds[i].x = 14;
-      leds[i].y = 24;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 39: 
-      leds[i].x = 13;
-      leds[i].y = 19;
-      leds[i].type = NITROGEN;
-      break;
-    case 40: 
-      leds[i].x = 14;
-      leds[i].y = 13;
-      leds[i].type = NITROGEN;
-      break;
-    case 41: 
-      leds[i].x = 15;
-      leds[i].y = 7;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 42: 
-      leds[i].x = 8;
-      leds[i].y = 6;
-      leds[i].type = PLANKTON;
-      break;
-    case 43: 
-      leds[i].x = 8;
-      leds[i].y = 3;
-      leds[i].type = PH;
-      break;
-    case 44: 
-      leds[i].x = 3;
-      leds[i].y = 8;
-      leds[i].type = NITROGEN;
-      break;
-    case 45: 
-      leds[i].x = 3;
-      leds[i].y = 16;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 46: 
-      leds[i].x = 7;
-      leds[i].y = 19;
-      leds[i].type = PLANKTON;
-      break;
-    case 47: 
-      leds[i].x = 9;
-      leds[i].y = 14;
-      leds[i].type = PH;
-      break;
-    case 48: 
-      leds[i].x = 23;
-      leds[i].y = 26;
-      leds[i].type = PH;
-      break;
-    case 49: 
-      leds[i].x = 21;
-      leds[i].y = 32;
-      leds[i].type = NITROGEN;
-      break;
-    case 50: 
-      leds[i].x = 18;
-      leds[i].y = 37;
-      leds[i].type = PH;
-      break;
-    case 51: 
-      leds[i].x = 12;
-      leds[i].y = 40;
-      leds[i].type = PLANKTON;
-      break;
-    case 52: 
-      leds[i].x = 13;
-      leds[i].y = 44;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 53: 
-      leds[i].x = 7;
-      leds[i].y = 38;
-      leds[i].type = NITROGEN;
-      break;
-    case 54: 
-      leds[i].x = 12;
-      leds[i].y = 32;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 55: 
-      leds[i].x = 6;
-      leds[i].y = 30;
-      leds[i].type = PLANKTON;
-      break;
-    case 56: 
-      leds[i].x = 3;
-      leds[i].y = 26;
-      leds[i].type = PH;
-      break;
-    case 57: 
-      leds[i].x = 9;
-      leds[i].y = 25;
-      leds[i].type = NITROGEN;
-      break;
-    case 58: 
-      leds[i].x = 12;
-      leds[i].y = 19;
-      leds[i].type = PLANKTON;
-      break;
-    case 59: 
-      leds[i].x = 6;
-      leds[i].y = 19;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 60: 
-      leds[i].x = 4;
-      leds[i].y = 14;
-      leds[i].type = NITROGEN;
-      break;
-    case 61: 
-      leds[i].x = 6;
-      leds[i].y = 10;
-      leds[i].type = PLANKTON;
-      break;
-    case 62: 
-      leds[i].x = 4;
-      leds[i].y = 6;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 63: 
-      leds[i].x = 11;
-      leds[i].y = 7;
-      leds[i].type = PH;
-      break;
-    case 64: 
-      leds[i].x = 11;
-      leds[i].y = 14;
-      leds[i].type = NITROGEN;
-      break;
-    case 65: 
-      leds[i].x = 17;
-      leds[i].y = 21;
-      leds[i].type = TEMPERATURE;
-      break;
-    case 66: 
-      leds[i].x = 18;
-      leds[i].y = 28;
-      leds[i].type = PLANKTON;
-      break;
-    case 67: 
-      leds[i].x = 17;
-      leds[i].y = 16;
-      leds[i].type = PH;
-      break;
-    case 68: 
-      leds[i].x = 17;
-      leds[i].y = 5;
-      leds[i].type = PLANKTON;
-      break;
-    case 69: 
-      leds[i].x = 22;
-      leds[i].y = 4;
-      leds[i].type = NITROGEN;
-      break;
-    case 70: 
-      leds[i].x = 22;
-      leds[i].y = 14;
-      leds[i].type = PH;
-      break;
-    default: 
-      break;
-    }    
-
-  }
-
-}
-
+led leds[70] = {
+{4,16,NITROGEN,0},
+{6,10,PLANKTON,1},
+{4,4,PH,2},
+{10,8,TEMPERATURE,3},
+{16,7,PH,4},
+{23,5,TEMPERATURE,5},
+{21,10,PLANKTON,6},
+{23,17,NITROGEN,7},
+{22,23,PH,8},
+{18,29,TEMPERATURE,9},
+{23,39,PH,10},
+{19,36,PLANKTON,11},
+{15,34,NITROGEN,12},
+{14,31,TEMPERATURE,13},
+{10,33,PLANKTON,14},
+{12,38,PH,15},
+{15,45,NITROGEN,16},
+{10,43,PLANKTON,17},
+{4,39,TEMPERATURE,18},
+{5,32,NITROGEN,19},
+{11,25,NITROGEN,20},
+{16,20,PLANKTON,21},
+{13,17,TEMPERATURE,22},
+{5,23,PH,23},
+{22,10,PH,24},
+{20,14,PLANKTON,25},
+{21,18,TEMPERATURE,26},
+{22,23,PH,27},
+{19,27,PLANKTON,28},
+{19,32,NITROGEN,29},
+{14,35,PH,30},
+{19,39,TEMPERATURE,31},
+{15,42,PLANKTON,32},
+{11,44,NITROGEN,33},
+{5,38,TEMPERATURE,34},
+{6,33,PLANKTON,35},
+{4,27,PH,36},
+{11,28,NITROGEN,37},
+{14,24,TEMPERATURE,38},
+{13,19,NITROGEN,39},
+{14,13,NITROGEN,40},
+{15,7,TEMPERATURE,41},
+{8,6,PLANKTON,42},
+{8,3,PH,43},
+{3,8,NITROGEN,44},
+{3,16,TEMPERATURE,45},
+{7,19,PLANKTON,46},
+{9,14,PH,47},
+{23,26,PH,48},
+{21,32,NITROGEN,49},
+{18,37,PH,50},
+{12,40,PLANKTON,51},
+{13,44,TEMPERATURE,52},
+{7,38,NITROGEN,53},
+{12,32,TEMPERATURE,54},
+{6,30,PLANKTON,55},
+{3,26,PH,56},
+{9,25,NITROGEN,57},
+{12,19,PLANKTON,58},
+{6,19,TEMPERATURE,59},
+{4,14,NITROGEN,60},
+{6,10,PLANKTON,61},
+{4,6,TEMPERATURE,62},
+{11,7,PH,63},
+{11,14,NITROGEN,64},
+{17,21,TEMPERATURE,65},
+{18,28,PLANKTON,66},
+{17,16,PH,67},
+{17,5,PLANKTON,68},
+{22,4,NITROGEN,69}
+};
 
 
 
