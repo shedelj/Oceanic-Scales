@@ -37,10 +37,10 @@ RECEIVE_DATA_STRUCTURE mydata;
 
 struct led
 {
-  int x;
-  int y;
-  char type;
-  uint8_t id;
+  int x; //coordinate positions 
+  int y; //on the board
+  char type; //phyto, ph, or nitrogen
+  uint8_t id; //position on strip
 };
 
 //state values
@@ -558,6 +558,7 @@ void calibrate(){
 //  temperature = (Serial.read() - '0') * 25; 
 //}
 
+led leds[70] = {{4, 16 Nitrogen}, }
 void init_leds()
 {
   for(int i = 0; i < LIGHT_COUNT; ++i)
