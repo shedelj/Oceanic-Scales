@@ -13,6 +13,7 @@
 
 #define WINDOW_X (26)
 #define WINDOW_Y (48)
+#define DEBUG
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
@@ -23,9 +24,6 @@ struct RECEIVE_DATA_STRUCTURE{
   //put your variable definitions here for the data you want to receive
   //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
   uint8_t state;
-//  int nitrogen;
-//  int ph;
-//  int temperature;
   uint8_t nitrogen;
   uint8_t ph;
   uint8_t temperature;
@@ -71,12 +69,6 @@ enum types{
 
 led leds [LIGHT_COUNT];
 
-
-//uint8_t state = 0;
-//uint8_t nitrogen = 80;
-//uint8_t ph = 80;
-//uint8_t temperature = 80;
-
 int TIME = 0;
 //start without winning or losing
 boolean winning = false; 
@@ -89,7 +81,9 @@ void setup() {
   //initialize LEDS
   init_leds();
 
-  Serial.println("Ready"); 
+  #ifdef DEBUG
+    Serial.println("Ready"); 
+  #endif
 
   strip.begin();
   strip.show();
@@ -104,13 +98,6 @@ void setup() {
 //---------------------------------
 
 void loop() {
-  //readNextCommand();
-  //human_input();
-  //solid();
-  //  Serial.print("state = ");
-  //  Serial.println(state);
-  //sampleEncoder();
-  //  if(ET.receiveData()) Serial.println("Yeah");
 
   //recieve data from mega
   ET.receiveData();
@@ -133,37 +120,12 @@ void loop() {
     case PULLDOWN : 
       //victory();
       break;
-    /*case DISPLAY_PARAMETERS  : 
-      display_paramaters();
-      break;
-    */
     default       : 
       solid();
       break;
   }
   strip.show();
 }
-
-/*
-void display_paramaters()
-{
-  for(int i = 0; i < LIGHT_COUNT; ++i)
-  {
-    strip.setPixelColor(i, mydata.temperature, mydata.nitrogen, mydata.ph);
-  } 
-}
-*/
-
-
-
-//void game2() {
-//   for (int i=0; i < strip.numPixels(); i++) {
-//      strip.setPixelColor(i, 255, 0, 0);
-//      strip.show();
-////      delay(10);
-//  }
-//}
-
 
 int rgbShiftCalc (int next, int current, int sep){
   int value1;
@@ -208,13 +170,13 @@ void nitroColor(int i){
      b = rgbShiftCalc(80,22,38);
    }
    
-//        96,62,66   
-//        144,62,31
-//        238,66,39
-//        240,90,40
-//        247,147,29
-//        255,221,22
-//        0,165,80
+    //        96,62,66   
+    //        144,62,31
+    //        238,66,39
+    //        240,90,40
+    //        247,147,29
+    //        255,221,22
+    //        0,165,80
   strip.setPixelColor(i, r, g, b);
 };
 
@@ -228,12 +190,6 @@ void game()
 {
   
   
-//  Serial.print("nitrogen = ");
-//  Serial.println(mydata.nitrogen);
-//  Serial.print("temperature = ");
-//  Serial.println(mydata.temperature);
-//  Serial.print("ph = ");
-//  Serial.println(mydata.ph);
   //balance - this basically determines what state we go into
   // balance < 25 -> win
   // balance > 300 -> loing
@@ -248,25 +204,11 @@ void game()
   if(control >= 1) control = control - 1;
 
   if(balance < 30) winning = true;
-//  if(balance > 300) losing = true;
 
-//  if (balance < 30)
-//  {
-//      t += (PI / 64); //+ victorycontrol;  
-//      if (t >= TWO_PI) t = t - TWO_PI;
-//      victorycontrol += .005;
-//
-//  }
   for(int i = 0; i < LIGHT_COUNT; ++i)
   {
     //win
      if(winning) victory(i, t, victorycontrol);
-//    if(balance < 30)
-//    {
-//      victory(i, t, victorycontrol);
-//    }
-    //die
-    //else if(losing) death(i);
 
     //otherwise, update the LEDs 
     else
@@ -282,9 +224,6 @@ void game()
           strip.setPixelColor(i, 15, 255 - mydata.ph, mydata.ph);
           break;
         case NITROGEN: 
-//          if (mydata.nitrogen <  127) strip.setPixelColor(i, (mydata.nitrogen * 2) , 0, 5);
-//          else strip.setPixelColor(i, 255 - (mydata.nitrogen - 127) * 2, (mydata.nitrogen - 127)* 2, 5);
-        //  strip.setPixelColor(i,255 -  mydata.nitrogen, ((mydata.nitrogen+ 1) / .6667 + 83) , 5);
             strip.setPixelColor(i,255 -  mydata.nitrogen, mydata.nitrogen / 2 + 127 , 5);
 
           break;
@@ -308,23 +247,6 @@ void game()
       }
     victorycontrol += .003;
   }
-
-//  if(losing)
-//
-//  {
-//    if (movingY < 0) {
-//       movingY = 48;
-//    }
-//
-//    dcontrol += 0.1;
-//
-//    if(movingX >= WINDOW_X) {
-//       dcontrol = 0;
-//       losing = false;
-//    }
-//    
-//  }
-//
 }
 
 
@@ -345,36 +267,12 @@ void death(int i) {
       }
 }
 
-//
-// void temp_control(int i)
-// {
-//  uint32_t x = strip.getPixelColor(i);
-//  uint8_t oldb = x & 0xff;
-//  uint8_t oldg = (x >> 8) & 0xff;
-//  uint8_t oldr = (x >> 16) & 0xff;
-//  uint8_t bleh = x >> 24;
-//  
-//  strip.setPixelColor(i, temperature, 15 , 255-temperature);
-//  uint8_t r = temperature;
-//  uint8_t g = 15;
-//  uint8_t b = 255-temperature;
-//  
-//  float weightedr = r * (1 - victorycontrol) + oldr * victorycontrol;
-//  float weightedg = g * (1 - victorycontrol) + oldg * victorycontrol;
-//  float weightedb = b * (1 - victorycontrol) + oldb * victorycontrol;
-//  strip.setPixelColor(i, weightedr, weightedg, weightedb);
-//
-//  
-//    //strip.setPixelColor(i, value, value, value);
-//
-// }
-// 
-
 void game_plankton(int index, float control)
 {
-  //delay(50);
-  //Serial.println(control);
-  //Serial.println(balance);
+  #ifdef DEBUG
+    Serial.println(control);
+    Serial.println(balance);
+  #endif
   uint8_t value;
   switch(index % 5)
   {
@@ -386,7 +284,6 @@ void game_plankton(int index, float control)
       break;
     case 2: 
       value = 127 + (int) (127 * sin(TWO_PI * (control + .4)));
-      //leds[i].vibration = sin(TWO_PI * (float) ((counter + 160) % 400) / 400) + 1;
       break;
     case 3: 
       value = 127 + (int) (127 * sin(TWO_PI * (control + .6)));
@@ -396,32 +293,8 @@ void game_plankton(int index, float control)
       break;
   }
 
-//  uint32_t x = strip.getPixelColor(index);
-//  uint8_t oldb = x & 0xff;
-//  uint8_t oldg = (x >> 8) & 0xff;
-//  uint8_t oldr = (x >> 16) & 0xff;
-//  uint8_t bleh = x >> 24;
-////  
-//    uint8_t newr = oldr * (victorycontrol) + value * (1-victorycontrol);
-//    uint8_t newg = oldg * (victorycontrol) + value * (1-victorycontrol);
-//    uint8_t newb = oldb * (victorycontrol) + value * (1-victorycontrol);
-//
-//    strip.setPixelColor(index, newr, newg, newb);
   strip.setPixelColor(index, value, value, value);
 }
-
-//uint8_t average_value(uint8_t v1, uint8_t v2)
-//{
-//  uint32_t x = strip.getPixelColor(i);
-//  uint8_t oldb = x & 0xff;
-//  uint8_t oldg = (x >> 8) & 0xff;
-//  uint8_t oldr = (x >> 16) & 0xff;
-//  uint8_t bleh = x >> 24;
-//  
-//  return oldg * (1 - victorycontrol) + brightness * victorycontrol;
-//
-//
-//}
 
 //wipe LEDs blank
 void wipe()
@@ -432,7 +305,6 @@ void wipe()
   }
 }
 
-//shows BLUE
 void solid()
 {
   //wipe();
@@ -474,24 +346,17 @@ boolean victory(int index, float t, float victorycontrol)
   uint8_t oldb = pixelColor & 0xff;
   uint8_t oldg = (pixelColor >> 8) & 0xff;
   uint8_t oldr = (pixelColor >> 16) & 0xff;
-  //uint8_t bleh = pixelColor >> 24;
-  
-  //return oldg * (1 - victorycontrol) + brightness * victorycontrol;
-
   float d = ((float) leds[index].y / (float) (WINDOW_Y * 2) ) * TWO_PI;
   //brightness level based on the difference of the (x) of sin(x) and d
   float level = cos(t - d) + 1;
   uint8_t brightness = (uint8_t) (level * 127);
-  //    int weightedbrightness =(int) brightness - ((int) 256 - (int) brightness);
-  //    if (weightedbrightness < 0) brightness = 0;
-  //    else brightness = (uint8_t) weightedbrightness;
-  //Serial.println(oldr * (1 - victorycontrol));
+  #ifdef DEBUG
+    Serial.println(oldr * (1 - victorycontrol));
+  #endif 
   float weightedr = oldr * (1 - victorycontrol) + brightness * victorycontrol;
   float weightedg = oldg * (1 - victorycontrol) + brightness * victorycontrol;
   float weightedb = oldb * (1 - victorycontrol) + brightness * victorycontrol;
   strip.setPixelColor(index, weightedr, weightedg, weightedb);
-  //strip.setPixelColor(i, brightness, brightness, brightness);
-
 }
 
 
@@ -511,6 +376,7 @@ void calibrate(){
   mydata.state = 0;
 }
 
+<<<<<<< HEAD
 //
 //void readNextCommand()
 //{
@@ -559,6 +425,8 @@ void calibrate(){
 //}
 
 led leds[70] = {{4, 16 Nitrogen}, }
+=======
+>>>>>>> d8b5b1590a9964026b905e736921ca9698741d11
 void init_leds()
 {
   for(int i = 0; i < LIGHT_COUNT; ++i)
