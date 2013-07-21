@@ -112,8 +112,8 @@ void getEncoderData()
 
 #ifdef DEBUG
   Serial.println(sensorValue3);
-  Serial.println(temperature);
-  Serial.println(sensorValue);
+  Serial.println(sensorValue2);
+  Serial.println(sensorValue1);
 #endif
 
   diff1 = diff1 + (sensorValue1 - prevValue1) ;
