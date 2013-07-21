@@ -1,6 +1,6 @@
-#include <EasyTransfer.h>
+#include "EasyTransfer.h"
 
-#include <Adafruit_WS2801.h>
+#include "Adafruit_WS2801.h"
 #include "SPI.h"
 
 #define DATA_PIN (2)
@@ -250,23 +250,6 @@ void game()
 }
 
 
-//death variables
-float dcontrol = 0;
-float drate = 30;
-uint8_t dbrightness = 0;
-
-void death(int i) {
-    //moving X moves a "line" across the X axis at the rate determined by dcontrol
-    float movingX = dcontrol*(WINDOW_X/2);
-    //moving Y moves a "line" down the y axis by doing some trig (based on dcontrol and drate (angle))
-    float movingY = (WINDOW_Y - (abs((dcontrol*(WINDOW_X)/2)*tan(drate))));
-      //brightness is determined by how far away y is multiplied by the movingY rate
-      dbrightness = (uint8_t) 48+((WINDOW_Y - leds[i].y)*(movingY));
-      if (leds[i].x < movingX) {
-        strip.setPixelColor(i, dbrightness, dbrightness, 0);
-      }
-}
-
 void game_plankton(int index, float control)
 {
   #ifdef DEBUG
@@ -376,78 +359,34 @@ void calibrate(){
   mydata.state = 0;
 }
 
-led leds[70] = {
-{4,16,NITROGEN,0},
-{6,10,PLANKTON,1},
-{4,4,PH,2},
-{10,8,TEMPERATURE,3},
-{16,7,PH,4},
-{23,5,TEMPERATURE,5},
-{21,10,PLANKTON,6},
-{23,17,NITROGEN,7},
-{22,23,PH,8},
-{18,29,TEMPERATURE,9},
-{23,39,PH,10},
-{19,36,PLANKTON,11},
-{15,34,NITROGEN,12},
-{14,31,TEMPERATURE,13},
-{10,33,PLANKTON,14},
-{12,38,PH,15},
-{15,45,NITROGEN,16},
-{10,43,PLANKTON,17},
-{4,39,TEMPERATURE,18},
-{5,32,NITROGEN,19},
-{11,25,NITROGEN,20},
-{16,20,PLANKTON,21},
-{13,17,TEMPERATURE,22},
-{5,23,PH,23},
-{22,10,PH,24},
-{20,14,PLANKTON,25},
-{21,18,TEMPERATURE,26},
-{22,23,PH,27},
-{19,27,PLANKTON,28},
-{19,32,NITROGEN,29},
-{14,35,PH,30},
-{19,39,TEMPERATURE,31},
-{15,42,PLANKTON,32},
-{11,44,NITROGEN,33},
-{5,38,TEMPERATURE,34},
-{6,33,PLANKTON,35},
-{4,27,PH,36},
-{11,28,NITROGEN,37},
-{14,24,TEMPERATURE,38},
-{13,19,NITROGEN,39},
-{14,13,NITROGEN,40},
-{15,7,TEMPERATURE,41},
-{8,6,PLANKTON,42},
-{8,3,PH,43},
-{3,8,NITROGEN,44},
-{3,16,TEMPERATURE,45},
-{7,19,PLANKTON,46},
-{9,14,PH,47},
-{23,26,PH,48},
-{21,32,NITROGEN,49},
-{18,37,PH,50},
-{12,40,PLANKTON,51},
-{13,44,TEMPERATURE,52},
-{7,38,NITROGEN,53},
-{12,32,TEMPERATURE,54},
-{6,30,PLANKTON,55},
-{3,26,PH,56},
-{9,25,NITROGEN,57},
-{12,19,PLANKTON,58},
-{6,19,TEMPERATURE,59},
-{4,14,NITROGEN,60},
-{6,10,PLANKTON,61},
-{4,6,TEMPERATURE,62},
-{11,7,PH,63},
-{11,14,NITROGEN,64},
-{17,21,TEMPERATURE,65},
-{18,28,PLANKTON,66},
-{17,16,PH,67},
-{17,5,PLANKTON,68},
-{22,4,NITROGEN,69}
+//arbitrary coordinates for now
+led leds[24] = {
+{0,0,TEMPERATURE,0},
+{0,1,TEMPERATURE,1},
+{0,2,TEMPERATURE,2},
+{0,3,TEMPERATURE,3},
+{0,4,TEMPERATURE,4},
+{1,0,TEMPERATURE,5},
+{1,1,TEMPERATURE,6},
+{1,2,TEMPERATURE,7},
+{1,3,TEMPERATURE,8},
+{1,4,TEMPERATURE,9},
+{2,0,TEMPERATURE,10},
+{2,1,TEMPERATURE,11},
+{2,2,TEMPERATURE,12},
+{2,3,PLANKTON,13},
+{2,4,PLANKTON,14},
+{3,0,PLANKTON,15},
+{3,1,PLANKTON,16},
+{3,2,PLANKTON,17},
+{3,3,PLANKTON,18},
+{3,4,PLANKTON,19},
+{4,0,PLANKTON,20},
+{4,1,PLANKTON,21},
+{4,2,PLANKTON,22},
+{4,3,PLANKTON,23}
 };
+
 
 
 

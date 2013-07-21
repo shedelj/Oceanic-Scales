@@ -1,4 +1,4 @@
-#include <EasyTransfer.h>
+#include "EasyTransfer.h"
 #define DEBUG
 
 enum states{
@@ -51,7 +51,9 @@ void loop()
 #endif
   ET.sendData();
   //writeState();
-  int balance = abs(mydata.temperature - 127) + abs(mydata.ph - 127)  + abs(mydata.nitrogen -127);
+  //int balance = abs(mydata.temperature - 127) + abs(mydata.ph - 127)  + abs(mydata.nitrogen -127);
+  int balance = abs(mydata.temperature - 127);//simplified for zero1
+
   //if (mydata.state != GAME) Serial.write(0);
   
   if (balance < 30)
