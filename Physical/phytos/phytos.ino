@@ -6,7 +6,7 @@
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (72)
+#define LIGHT_COUNT (24)//change back after zero1
 #define SB_BUFFER_SIZE (64)
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
@@ -67,19 +67,44 @@ enum types{
 
 
 
-led leds [LIGHT_COUNT];
+//arbitrary coordinates for now
+led leds[LIGHT_COUNT] = {
+{0,0,TEMPERATURE,0},
+{0,1,TEMPERATURE,1},
+{0,2,TEMPERATURE,2},
+{0,3,TEMPERATURE,3},
+{0,4,TEMPERATURE,4},
+{1,0,TEMPERATURE,5},
+{1,1,TEMPERATURE,6},
+{1,2,TEMPERATURE,7},
+{1,3,TEMPERATURE,8},
+{1,4,TEMPERATURE,9},
+{2,0,TEMPERATURE,10},
+{2,1,TEMPERATURE,11},
+{2,2,TEMPERATURE,12},
+{2,3,PLANKTON,13},
+{2,4,PLANKTON,14},
+{3,0,PLANKTON,15},
+{3,1,PLANKTON,16},
+{3,2,PLANKTON,17},
+{3,3,PLANKTON,18},
+{3,4,PLANKTON,19},
+{4,0,PLANKTON,20},
+{4,1,PLANKTON,21},
+{4,2,PLANKTON,22},
+{4,3,PLANKTON,23}
+};
+
 
 int TIME = 0;
 //start without winning or losing
 boolean winning = false; 
 boolean losing = false;
+int balance = 0;
 
 void setup() {
   
   Serial.begin(9600);
-
-  //initialize LEDS
-  init_leds();
 
   #ifdef DEBUG
     Serial.println("Ready"); 
@@ -191,10 +216,12 @@ void game()
   
   
   //balance - this basically determines what state we go into
+  //7/21/13- Now defined globally!
   // balance < 25 -> win
   // balance > 300 -> loing
-  int balance = abs(mydata.temperature - 127) + abs(mydata.ph - 127)  + abs(mydata.nitrogen -127);
-  
+  //balance = abs(mydata.temperature - 127) + abs(mydata.ph - 127)  + abs(mydata.nitrogen -127);
+  //edit for zero. water only (change back later)
+    balance = abs(mydata.temperature - 127);
   
   //incriments (speed of blink) depending on how in/out of balance
   //this makes the LEDs speed up in the regular game (blinky blink)
@@ -359,33 +386,6 @@ void calibrate(){
   mydata.state = 0;
 }
 
-//arbitrary coordinates for now
-led leds[24] = {
-{0,0,TEMPERATURE,0},
-{0,1,TEMPERATURE,1},
-{0,2,TEMPERATURE,2},
-{0,3,TEMPERATURE,3},
-{0,4,TEMPERATURE,4},
-{1,0,TEMPERATURE,5},
-{1,1,TEMPERATURE,6},
-{1,2,TEMPERATURE,7},
-{1,3,TEMPERATURE,8},
-{1,4,TEMPERATURE,9},
-{2,0,TEMPERATURE,10},
-{2,1,TEMPERATURE,11},
-{2,2,TEMPERATURE,12},
-{2,3,PLANKTON,13},
-{2,4,PLANKTON,14},
-{3,0,PLANKTON,15},
-{3,1,PLANKTON,16},
-{3,2,PLANKTON,17},
-{3,3,PLANKTON,18},
-{3,4,PLANKTON,19},
-{4,0,PLANKTON,20},
-{4,1,PLANKTON,21},
-{4,2,PLANKTON,22},
-{4,3,PLANKTON,23}
-};
 
 
 
