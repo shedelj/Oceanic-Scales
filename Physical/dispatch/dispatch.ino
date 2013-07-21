@@ -1,5 +1,5 @@
 #include "EasyTransfer.h"
-#define DEBUG
+//#define DEBUG
 
 enum states{
  RESTING,

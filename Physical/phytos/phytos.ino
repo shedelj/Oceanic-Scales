@@ -13,7 +13,7 @@
 
 #define WINDOW_X (26)
 #define WINDOW_Y (48)
-#define DEBUG
+//#define DEBUG
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
