@@ -12,7 +12,7 @@
 #define PARAMETER_MAX (255)
 
 #define WINDOW_X (26)
-#define WINDOW_Y (400)
+#define WINDOW_Y (800)
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
@@ -34,7 +34,7 @@ struct RECEIVE_DATA_STRUCTURE{
 */
 //RECEIVE_DATA_STRUCTURE mydata;
 int nitrogen = 127;
-int temperature = 127;
+int temperature = 100;
 int ph = 127;
 
 int prevValue1 = 0;
@@ -198,28 +198,21 @@ float t = 0;
 void game()
 {
   
-  
-//  Serial.print("nitrogen = ");
-//  Serial.println(mydata.nitrogen);
-//  Serial.print("temperature = ");
-//  Serial.println(mydata.temperature);
-//  Serial.print("ph = ");
-//  Serial.println(mydata.ph);
   //balance - this basically determines what state we go into
   // balance < 25 -> win
   // balance > 300 -> loing
   int balance = abs(temperature - 127) + abs(ph - 127)  + abs(nitrogen -127);
   Serial.print("temp: ");
   Serial.println(temperature);
-  Serial.print("ph: ");
-  Serial.println(ph);
-  Serial.print("nit: ");
-  Serial.println(nitrogen);
+//  Serial.print("ph: ");
+//  Serial.println(ph);
+//  Serial.print("nit: ");
+//  Serial.println(nitrogen);
 //  Serial.print("balance: ");
 //  Serial.println(balance);
 //  delay(2000);
 //  mydata.temperature = mydata.ph = mydata.nitrogen = 127;
-  //incriments (speed of blink) depending on how in/out of balance
+  //increments (speed of blink) depending on how in/out of balance
   //this makes the LEDs speed up in the regular game (blinky blink)
   //control = control + (( (float) balance) / (float) 4000);
   
@@ -236,35 +229,11 @@ void game()
 //      victorycontrol += .005;
 //
 //  }
-//  for(int i = 0; i < LIGHT_COUNT; ++i)
-//  {
-//    char type = leds[i].type;
-//    
-//    Serial.print(i);
-//    Serial.print(": ");
-//    if (type == PLANKTON)
-//    {
-//      Serial.println("PLANKTON"); 
-//    }
-//    else if ( type == TEMPERATURE )
-//    {
-//      Serial.println("TEMPERATURE"); 
-//    }
-//    else if ( type == PH )
-//    {
-//      Serial.println("PH"); 
-//    }
-//    else if ( type == NITROGEN )
-//    {
-//      Serial.println("NITROGEN"); 
-//    }
-//    else
-//    {
-//      Serial.println("control_chem"); 
-//      control_chem(i); 
-//    }
-//    
-//  }
+  for(int i = 0; i < LIGHT_COUNT; i += 2)
+  {
+    char type = leds[i].type;
+    control_chem(i);    
+  }
 //  delay(2000);
     //win
      //if(winning) victory(i, t, victorycontrol);
@@ -305,43 +274,17 @@ void game()
     }
   }
 */
-/*
-  if(winning)
-  {
-    t += (PI / 128) + victorycontrol;  
-    if(victorycontrol >= 1) 
-      {
-        victorycontrol = 0;
-        t = 0;
-        winning =  false; 
-      }
-    victorycontrol += .003;
-  }
-*/
-//  if(losing)
-//
-//  {
-//    if (movingY < 0) {
-//       movingY = 48;
-//    }
-//
-//    dcontrol += 0.1;
-//
-//    if(movingX >= WINDOW_X) {
-//       dcontrol = 0;
-//       losing = false;
-//    }
-//    
-//  }
-//
+
 }
 
 void control_chem(uint8_t id)
 {
    uint8_t brightness = get_brightness_chem(id);
+   if(id == 42) Serial.println(brightness);
+
    switch(leds[id].type)
    {
-      case TEMPERATURE: strip.setPixelColor(id, brightness, 0, 0);
+      case TEMPERATURE: strip.setPixelColor(id, 255- brightness, 10, brightness);
                         break;
       default: break;
    } 
@@ -360,14 +303,14 @@ uint8_t get_brightness_chem(uint8_t id)
                        break;
     default: relevant_value = nitrogen;    
    }
-   int distance =  relevant_value - leds[id].y * (255 / WINDOW_Y) ;
-   if(distance + 40 < 0)
+   int distance =  relevant_value - leds[id].y * (double) ( 255.0 / WINDOW_Y) ;
+   if(distance < 0)
    {
      return 0;
    }
-   if (distance < 40) 
+   if (distance < 100) 
    {
-     return (255 / 40) * distance;
+     return (255 / 100) * abs(distance);
    }
    else
    {
@@ -512,37 +455,7 @@ void solid()
   }
 }
 
-//nitrogen: brown orange yellow green
-//temperature: red purple blue
-//ph: yellowish green aquamarine cyan blue
-/*
-boolean victory(int index, float t, float victorycontrol)
-{
-  uint32_t pixelColor = strip.getPixelColor(index);
-  uint8_t oldb = pixelColor & 0xff;
-  uint8_t oldg = (pixelColor >> 8) & 0xff;
-  uint8_t oldr = (pixelColor >> 16) & 0xff;
-  //uint8_t bleh = pixelColor >> 24;
-  
-  //return oldg * (1 - victorycontrol) + brightness * victorycontrol;
 
-  float d = ((float) leds[index].y / (float) (WINDOW_Y * 2) ) * TWO_PI;
-  //brightness level based on the difference of the (x) of sin(x) and d
-  float level = cos(t - d) + 1;
-  uint8_t brightness = (uint8_t) (level * 127);
-  //    int weightedbrightness =(int) brightness - ((int) 256 - (int) brightness);
-  //    if (weightedbrightness < 0) brightness = 0;
-  //    else brightness = (uint8_t) weightedbrightness;
-  //Serial.println(oldr * (1 - victorycontrol));
-  float weightedr = oldr * (1 - victorycontrol) + brightness * victorycontrol;
-  float weightedg = oldg * (1 - victorycontrol) + brightness * victorycontrol;
-  float weightedb = oldb * (1 - victorycontrol) + brightness * victorycontrol;
-  strip.setPixelColor(index, weightedr, weightedg, weightedb);
-  //strip.setPixelColor(i, brightness, brightness, brightness);
-
-}
-*/
-/*
 void calibrate(){
   wipe();
   for(int i = 0; i < LIGHT_COUNT; )
@@ -558,10 +471,10 @@ void calibrate(){
     delay(15); 
   }
   Serial.println("calibration over");
-  mydata.state = 0;
+  state = 0;
 }
-*/
 
+/*
 void calibrate(){
   wipe();
   for(int i = 0; i < LIGHT_COUNT; )
@@ -584,7 +497,7 @@ void calibrate(){
   Serial.println("calibration over");
   state = 0;
 }
-
+*/
 void getEncoderData()
 {
   int sensorValue1 = pulseIn(49, HIGH);
@@ -690,7 +603,7 @@ void init_leds()
     case 0: 
       //leds[i].x = 215;
       leds[i].y = 24;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
      ;
       break;
     case 2: 
@@ -706,12 +619,12 @@ void init_leds()
     case 6: 
       //leds[i].x = 21;
       leds[i].y = 140;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 8: 
       //leds[i].x = 25;
       leds[i].y = 95;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break; 
     case 10: 
       //leds[i].x = 27;
@@ -731,7 +644,7 @@ void init_leds()
     case 16: 
       //leds[i].x = 15;
       leds[i].y = 34;
-      leds[i].type = NITROGEN;
+      leds[i].type = PLANKTON;
       break;
     case 18: 
       //leds[i].x = 4;
@@ -741,17 +654,17 @@ void init_leds()
     case 20: 
       //leds[i].x = 11;
       leds[i].y = 83;
-      leds[i].type = NITROGEN;
+      leds[i].type = TEMPERATURE;
       break;
     case 22: 
       //leds[i].x = 13;
       leds[i].y = 55;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 24: 
       //leds[i].x = 22;
       leds[i].y = 89;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 26: 
       //leds[i].x = 21;
@@ -766,7 +679,7 @@ void init_leds()
     case 30: 
       //leds[i].x = 14;
       leds[i].y = 132;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 32: 
       //leds[i].x = 15;
@@ -781,42 +694,42 @@ void init_leds()
     case 36: 
       //leds[i].x = 4;
       leds[i].y = 204;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 38: 
       //leds[i].x = 14;
       leds[i].y = 235;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 40: 
       //leds[i].x = 14;
       leds[i].y = 274;
-      leds[i].type = NITROGEN;
+      leds[i].type = TEMPERATURE;
       break;
     case 42: 
       //leds[i].x = 8;
       leds[i].y = 251;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 44: 
       //leds[i].x = 3;
       leds[i].y = 280;
-      leds[i].type = NITROGEN;
+      leds[i].type = PLANKTON;
       break;
     case 46: 
       //leds[i].x = 7;
       leds[i].y = 290;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 48: 
       //leds[i].x = 23;
       leds[i].y = 263;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 50: 
       //leds[i].x = 18;
       leds[i].y = 228;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 52: 
       //leds[i].x = 13;
@@ -826,12 +739,12 @@ void init_leds()
     case 54: 
       //leds[i].x = 12;
       leds[i].y = 200;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 56: 
       //leds[i].x = 3;
       leds[i].y = 198;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 58: 
       //leds[i].x = 12;
@@ -841,7 +754,7 @@ void init_leds()
     case 60: 
       //leds[i].x = 4;
       leds[i].y = 225;
-      leds[i].type = NITROGEN;
+      leds[i].type = TEMPERATURE;
       break;
     case 62: 
       //leds[i].x = 4;
@@ -851,169 +764,175 @@ void init_leds()
     case 64: 
       //leds[i].x = 11;
       leds[i].y = 55;
-      leds[i].type = NITROGEN;
+      leds[i].type = PLANKTON;
       break;
     case 66: 
       //leds[i].x = 18;
       leds[i].y = 90;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 68: 
       //leds[i].x = 17;
       leds[i].y = 110;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 70: 
       //leds[i].x = 22;
       leds[i].y = 157;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 72: 
       //leds[i].x = 22;
       leds[i].y = 170;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 74: 
       //leds[i].x = 22;
       leds[i].y = 131;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 76: 
       //leds[i].x = 22;
       leds[i].y = 93;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 78: 
       //leds[i].x = 22;
       leds[i].y = 52;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break; 
     case 80: 
       //leds[i].x = 22;
       leds[i].y = 58;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 82: 
       //leds[i].x = 22;
       leds[i].y = 111;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 84: 
       //leds[i].x = 22;
       leds[i].y = 51;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 86: 
       //leds[i].x = 22;
       leds[i].y = 78;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 88: 
       //leds[i].x = 22;
       leds[i].y = 118;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 90: 
       //leds[i].x = 22;
       leds[i].y = 154;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 92: 
       //leds[i].x = 22;
       leds[i].y = 140;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 94: 
       //leds[i].x = 22;
       leds[i].y = 167;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     //case 96: THERE'S NOTHING HERE
     case 98: 
       //leds[i].x = 22;
       leds[i].y = 55;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 100: 
       //leds[i].x = 22;
       leds[i].y = 88;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 102: 
       //leds[i].x = 22;
       leds[i].y = 98;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 104: 
       //leds[i].x = 22;
       leds[i].y = 129;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 106: 
       //leds[i].x = 22;
       leds[i].y = 160;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 108: 
       //leds[i].x = 22;
       leds[i].y = 167;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 110: 
       //leds[i].x = 22;
       leds[i].y = 121;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 112: 
       //leds[i].x = 22;
       leds[i].y = 73;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 114: 
       //leds[i].x = 22;
       leds[i].y = 49;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     //case 96: THERE'S NOTHING HERE
     case 116: 
       //leds[i].x = 22;
       leds[i].y = 104;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 118: 
       //leds[i].x = 22;
       leds[i].y = 148;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 120: 
       //leds[i].x = 22;
       leds[i].y = 125;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 122: 
       //leds[i].x = 22;
       leds[i].y = 78;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     case 124: 
       //leds[i].x = 22;
       leds[i].y = 53;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 126: 
       //leds[i].x = 22;
       leds[i].y = 127;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
     case 128: 
       //leds[i].x = 22;
       leds[i].y = 170;
-      leds[i].type = PH;
+      leds[i].type = TEMPERATURE;
       break;
     default: 
       break;
     }    
 
+  if(i >= 64) {
+    leds[i].y += 300;
+  }
+  if(i >= 98){
+    leds[i].y += 150; 
+  }
 //NEXT TIME: OFFSET BLRUGH
   }
 
