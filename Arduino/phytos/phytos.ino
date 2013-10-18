@@ -193,6 +193,7 @@ void nitroColor(int i){
 */
 
 float control = 0; 
+float blinkcontrol = 0;
 void game()
 {
   
@@ -231,11 +232,24 @@ void game()
   {
     char type = leds[i].type;
     uint8_t brightness = 0;
+    int r;
+    int g;
+    int b;
     switch(type)
     {
      case PLANKTON:    
        brightness = get_brightness_plankton(i);
-       strip.setPixelColor(i, brightness, brightness, brightness);
+        r =  g =  b = brightness;
+       if(temperature > 127)
+       {
+          r += temperature - 127;
+       }
+       else
+       {
+          b += 127 - temperature; 
+       }
+       r = brightness + (float) (temperature - 127);
+       strip.setPixelColor(i, r, g, b);
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
@@ -269,10 +283,15 @@ void game()
           break;
 */
 //   control = control + (( (float) balance) / (float) 4000);
-   control = control + .02;
+   control = control + .019;
    if (control >= 1) 
    {
      control -= 1;
+   }
+   blinkcontrol = blinkcontrol + .013;
+   if (blinkcontrol >= 1)
+   {
+     blinkcontrol -=1;
    }
 }
 
@@ -280,8 +299,6 @@ uint8_t get_brightness_plankton(int id)
 {
   float shift = (float) balance / (127 * 3);
   float weighted_average = ((float) blink_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
-  if(id == 44) Serial.println(pulse_value(id));
-
   return (uint8_t) weighted_average;
 }
 
@@ -316,7 +333,7 @@ uint8_t get_brightness_chem(int id)
 
 uint8_t pulse_value(int id)
 {
-   float t = ((control + sin((millis % 1000) * TWO_PI)  * TWO_PI);
+   float t = control * TWO_PI  ;
    float d = ((float) leds[id].y / (float) (WINDOW_Y * 2) ) * TWO_PI;
   //brightness level based on the difference of the (x) of sin(x) and d
   float level = cos(t - d) + 1;
@@ -329,19 +346,19 @@ uint8_t blink_value(int id)
    switch(id % 5)
    {
      case 0: 
-      return 127 + (int) (127 * sin(TWO_PI * control));
+      return 127 + (int) (127 * sin(TWO_PI * blinkcontrol));
       break;
     case 1: 
-      return 127 + (int) (127 * sin(TWO_PI * (control + .2)));
+      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .2)));
       break;
     case 2: 
-      return 127 + (int) (127 * sin(TWO_PI * (control + .4)));
+      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .4)));
       break;
     case 3: 
-      return 127 + (int) (127 * sin(TWO_PI * (control + .6)));
+      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .6)));
       break;
     case 4: 
-      return 127 + (int) (127 * sin(TWO_PI * (control + .8)));
+      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .8)));
       break; 
    }
    
