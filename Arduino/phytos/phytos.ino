@@ -232,24 +232,11 @@ void game()
   {
     char type = leds[i].type;
     uint8_t brightness = 0;
-    int r;
-    int g;
-    int b;
     switch(type)
     {
      case PLANKTON:    
        brightness = get_brightness_plankton(i);
-        r =  g =  b = brightness;
-       if(temperature > 127)
-       {
-          r += temperature - 127;
-       }
-       else
-       {
-          b += 127 - temperature; 
-       }
-       r = brightness + (float) (temperature - 127);
-       strip.setPixelColor(i, r, g, b);
+       strip.setPixelColor(i, brightness, brightness, brightness);
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
@@ -293,6 +280,18 @@ void game()
    {
      blinkcontrol -=1;
    }
+}
+
+
+void tint_plankton(id)
+{
+  uint32_t x = strip.getPixelColor(i);
+  uint8_t oldb = x & 0xff;
+  uint8_t oldg = (x >> 8) & 0xff;
+  uint8_t oldr = (x >> 16) & 0xff;
+  //uint8_t bleh = x >> 24;   // WHAT IS THIS VALUE??
+  
+  
 }
 
 uint8_t get_brightness_plankton(int id)
