@@ -36,6 +36,8 @@ struct RECEIVE_DATA_STRUCTURE{
 int nitrogen = 127;
 int temperature = 100;
 int ph = 127;
+int balance = 0;
+
 
 int prevValue1 = 0;
 int prevValue2 = 0;
@@ -46,6 +48,7 @@ int diff2 = 0;
 int diff3 = 0;
 
 int state = 0;
+
 struct led
 {
   int x;
@@ -188,22 +191,17 @@ void nitroColor(int i){
   strip.setPixelColor(i, r, g, b);
 };
 */
-/*
+
 float control = 0; 
-//basically, victorycontrol determines how long the victory state displays
-float victorycontrol = .00;
-//t controls sine wave (it is the x)
-float t = 0;
-*/
 void game()
 {
   
   //balance - this basically determines what state we go into
   // balance < 25 -> win
   // balance > 300 -> loing
-  int balance = abs(temperature - 127) + abs(ph - 127)  + abs(nitrogen -127);
-  Serial.print("temp: ");
-  Serial.println(temperature);
+  balance = abs(temperature - 127) + abs(ph - 127)  + abs(nitrogen -127);
+//  Serial.print("temp: ");
+//  Serial.println(temperature);
 //  Serial.print("ph: ");
 //  Serial.println(ph);
 //  Serial.print("nit: ");
@@ -232,20 +230,24 @@ void game()
   for(int i = 0; i < LIGHT_COUNT; i += 2)
   {
     char type = leds[i].type;
-    control_chem(i);    
+    uint8_t brightness = 0;
+    switch(type)
+    {
+     case PLANKTON:    
+       brightness = get_brightness_plankton(i);
+       strip.setPixelColor(i, brightness, brightness, brightness);
+       break;
+     case TEMPERATURE: 
+       brightness = get_brightness_chem(i);
+       strip.setPixelColor(i, 255- brightness, 10, brightness);
+       break; 
+     default:
+       break;
+      
+    }
+    
   }
-//  delay(2000);
-    //win
-     //if(winning) victory(i, t, victorycontrol);
-//    if(balance < 30)
-//    {
-//      victory(i, t, victorycontrol);
-//    }
-    //die
-    //else if(losing) death(i);
-
-    //otherwise, update the LEDs 
-    /*
+/*
     else
     {
       switch(leds[i].type)
@@ -265,32 +267,25 @@ void game()
             strip.setPixelColor(i,255 -  mydata.nitrogen, mydata.nitrogen / 2 + 127 , 5);
 
           break;
-        //otherwise, update plankton LEDs
-        default: 
-          game_plankton(i, control);
-          break;
-      }
-      //if (victorycontrol > 0) victorycontrol -= .005;
-    }
-  }
 */
-
-}
-
-void control_chem(uint8_t id)
-{
-   uint8_t brightness = get_brightness_chem(id);
-   if(id == 42) Serial.println(brightness);
-
-   switch(leds[id].type)
+//   control = control + (( (float) balance) / (float) 4000);
+   control = control + .02;
+   if (control >= 1) 
    {
-      case TEMPERATURE: strip.setPixelColor(id, 255- brightness, 10, brightness);
-                        break;
-      default: break;
-   } 
+     control -= 1;
+   }
 }
 
-uint8_t get_brightness_chem(uint8_t id)
+uint8_t get_brightness_plankton(int id)
+{
+  float shift = (float) balance / (127 * 3);
+  float weighted_average = ((float) blink_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
+  if(id == 44) Serial.println(pulse_value(id));
+
+  return (uint8_t) weighted_average;
+}
+
+uint8_t get_brightness_chem(int id)
 {  
    uint8_t relevant_value;
    switch(leds[id].type)
@@ -317,6 +312,40 @@ uint8_t get_brightness_chem(uint8_t id)
      return 255;
    }   
    
+}
+
+uint8_t pulse_value(int id)
+{
+   float t = ((control + sin((millis % 1000) * TWO_PI)  * TWO_PI);
+   float d = ((float) leds[id].y / (float) (WINDOW_Y * 2) ) * TWO_PI;
+  //brightness level based on the difference of the (x) of sin(x) and d
+  float level = cos(t - d) + 1;
+  return level * 127;
+}
+
+
+uint8_t blink_value(int id)
+{
+   switch(id % 5)
+   {
+     case 0: 
+      return 127 + (int) (127 * sin(TWO_PI * control));
+      break;
+    case 1: 
+      return 127 + (int) (127 * sin(TWO_PI * (control + .2)));
+      break;
+    case 2: 
+      return 127 + (int) (127 * sin(TWO_PI * (control + .4)));
+      break;
+    case 3: 
+      return 127 + (int) (127 * sin(TWO_PI * (control + .6)));
+      break;
+    case 4: 
+      return 127 + (int) (127 * sin(TWO_PI * (control + .8)));
+      break; 
+   }
+   
+ 
 }
 /*
 //death variables
@@ -474,30 +503,6 @@ void calibrate(){
   state = 0;
 }
 
-/*
-void calibrate(){
-  wipe();
-  for(int i = 0; i < LIGHT_COUNT; )
-  {
-    if (i % 2 == 1) {
-      strip.setPixelColor(i, 0, 0, 0);
-    }
-    else {
-      strip.setPixelColor(i, 255,255,255);
-    }
-   // if(Serial.read() != -1){
-    //  wipe();
-     // strip.setPixelColor(i, 255,255,255);
-      ++i;
-   // }
-    //delay(15); 
-  }
-  strip.show();
-
-  Serial.println("calibration over");
-  state = 0;
-}
-*/
 void getEncoderData()
 {
   int sensorValue1 = pulseIn(49, HIGH);
