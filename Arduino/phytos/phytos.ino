@@ -1,4 +1,3 @@
-#include <EasyTransfer.h>
 
 #include <Adafruit_WS2801.h>
 #include "SPI.h"
@@ -16,38 +15,10 @@
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
-//uint32_t pixels[LIGHT_COUNT];
-//EasyTransfer ET; 
-/*
-struct RECEIVE_DATA_STRUCTURE{
-  //put your variable definitions here for the data you want to receive
-  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
-  uint8_t state;
-//  int nitrogen;
-//  int ph;
-//  int temperature;
-  uint8_t nitrogen;
-  uint8_t ph;
-  uint8_t temperature;
-
-};
-*/
-//RECEIVE_DATA_STRUCTURE mydata;
-int nitrogen = 127;
-int temperature = 100;
-int ph = 127;
 int balance = 0;
-
-
-int prevValue1 = 0;
-int prevValue2 = 0;
-int prevValue3 = 0;
-
-int diff1 = 0;
-int diff2 = 0;
-int diff3 = 0;
-
 int state = 0;
+int living_count = 65;
+
 
 struct led
 {
@@ -55,7 +26,25 @@ struct led
   int y;
   char type;
   uint8_t id;
+  boolean alive;
 };
+
+struct chem
+{
+  float value;
+  int prev;
+  int diff;
+  float velocity;
+};
+
+void updateChem(int pin, chem* c);
+
+
+chem temperature;
+chem nitrogen;
+chem ph;
+
+
 
 //state values
 //0 - Rest
@@ -80,12 +69,6 @@ enum types{
 
 led leds [LIGHT_COUNT];
 
-
-//int TIME = 0;
-//start without winning or losing
-//boolean winning = false; 
-//boolean losing = false;
-
 void setup() {
   
   Serial.begin(9600);
@@ -97,7 +80,14 @@ void setup() {
 
   strip.begin();
   strip.show();
-
+  
+  temperature.value = 127;
+  temperature.prev = 0;
+  temperature.diff = 0;
+  temperature.velocity = 0;
+  
+  ph.value = 127;
+  nitrogen.value = 127;
   //sets up easytransfer for mydata and the serial port address
 //  ET.begin(details(mydata), &Serial);
 
@@ -112,10 +102,11 @@ void setup() {
 
 void loop() {
   //  Serial.print("state = ");
-  //  Serial.println(state);
-  //ET.receiveData();
-  getEncoderData();
+    //Serial.println(state);
   
+//  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
+  balance = abs(temperature.value - 127);
+  updateChem(49, &temperature);
   
   switch(state)
   { 
@@ -193,43 +184,41 @@ void nitroColor(int i){
 */
 
 float control = 0; 
-float blinkcontrol = 0;
+float twinklecontrol = 0;
 void game()
 {
   
   //balance - this basically determines what state we go into
   // balance < 25 -> win
   // balance > 300 -> loing
-  balance = abs(temperature - 127) + abs(ph - 127)  + abs(nitrogen -127);
-//  Serial.print("temp: ");
-//  Serial.println(temperature);
-//  Serial.print("ph: ");
-//  Serial.println(ph);
-//  Serial.print("nit: ");
-//  Serial.println(nitrogen);
-//  Serial.print("balance: ");
-//  Serial.println(balance);
-//  delay(2000);
-//  mydata.temperature = mydata.ph = mydata.nitrogen = 127;
-  //increments (speed of blink) depending on how in/out of balance
-  //this makes the LEDs speed up in the regular game (blinky blink)
-  //control = control + (( (float) balance) / (float) 4000);
-  
-  //should not be greater than 1
-  //if(control >= 1) control = control - 1;
-
-  //if(balance < 30) winning = true;
-//  if(balance > 300) losing = true;
-
-//  if (balance < 30)
-//  {
-//      t += (PI / 64); //+ victorycontrol;  
-//      if (t >= TWO_PI) t = t - TWO_PI;
-//      victorycontrol += .005;
-//
-//  }
+  //Serial.println(random(10));
+  int rand = random(100);
   for(int i = 0; i < LIGHT_COUNT; i += 2)
   {
+    
+   
+    if(leds[i].alive)
+    {
+       if(shall_die(i, rand))
+       {
+         leds[i].alive = false;
+         living_count--;
+         strip.setPixelColor(i, 0, 0, 0);
+       }
+    }
+    
+    if(!leds[i].alive)
+    {
+       if(shall_live_again(i, rand))
+       {
+          leds[i].alive = true;
+          living_count++;
+       }
+          continue;
+       
+    }
+    
+    
     char type = leds[i].type;
     uint8_t brightness = 0;
     switch(type)
@@ -240,7 +229,7 @@ void game()
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
-       strip.setPixelColor(i, 255- brightness, 10, brightness);
+       strip.setPixelColor(i, 255 - brightness, 10, brightness);
        break; 
      default:
        break;
@@ -275,14 +264,37 @@ void game()
    {
      control -= 1;
    }
-   blinkcontrol = blinkcontrol + .013;
-   if (blinkcontrol >= 1)
+   twinklecontrol = twinklecontrol + ((temperature.value * 3) / 10000.0);
+   if (twinklecontrol >= 1)
    {
-     blinkcontrol -=1;
+     twinklecontrol -=1;
    }
 }
 
+boolean shall_die(int i, int rand)
+{
+   if(balance * rand > 11000) {
+     Serial.println("DIE!");
+     return true;
+   }
+   return false;
+}
 
+boolean shall_live_again(int i, int rand)
+{
+  if(balance > 30)
+  {
+    return false;
+  }
+  if(balance * rand > 29000)
+  {
+//    Serial.println("revived");
+    return true;
+  }
+  return false;
+}
+
+/*
 void tint_plankton(id)
 {
   uint32_t x = strip.getPixelColor(i);
@@ -293,11 +305,12 @@ void tint_plankton(id)
   
   
 }
-
+*/
 uint8_t get_brightness_plankton(int id)
 {
-  float shift = (float) balance / (127 * 3);
-  float weighted_average = ((float) blink_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
+//  float shift = (float) balance / (127 * 3);
+  float shift = (float) balance / (127 );
+  float weighted_average = ((float) twinkle_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
   return (uint8_t) weighted_average;
 }
 
@@ -306,27 +319,28 @@ uint8_t get_brightness_chem(int id)
    uint8_t relevant_value;
    switch(leds[id].type)
    {
-     case NITROGEN: relevant_value = nitrogen;
+     case NITROGEN: relevant_value = nitrogen.value;
                     break;
-     case PH:       relevant_value = ph;
+     case PH:       relevant_value = ph.value;
                     break;
-     case TEMPERATURE: relevant_value = temperature;
+     case TEMPERATURE: relevant_value = temperature.value;
                        break;
-    default: relevant_value = nitrogen;    
+    default: relevant_value = nitrogen.value;    
    }
    int distance =  relevant_value - leds[id].y * (double) ( 255.0 / WINDOW_Y) ;
-   if(distance < 0)
+   
+   if(distance < -25)
    {
-     return 0;
+      return 255; 
    }
-   if (distance < 100) 
+   else if (distance > 25)
    {
-     return (255 / 100) * abs(distance);
+      return 0; 
    }
    else
    {
-     return 255;
-   }   
+      return (255 / 50.0) * (50 -  (distance + 25)); 
+   }
    
 }
 
@@ -340,111 +354,30 @@ uint8_t pulse_value(int id)
 }
 
 
-uint8_t blink_value(int id)
+uint8_t twinkle_value(int id)
 {
    switch(id % 5)
    {
      case 0: 
-      return 127 + (int) (127 * sin(TWO_PI * blinkcontrol));
+      return 127 + (int) (127 * sin(TWO_PI * twinklecontrol));
       break;
     case 1: 
-      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .2)));
+      return 127 + (int) (127 * sin(TWO_PI * (twinklecontrol + .2)));
       break;
     case 2: 
-      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .4)));
+      return 127 + (int) (127 * sin(TWO_PI * (twinklecontrol + .4)));
       break;
     case 3: 
-      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .6)));
+      return 127 + (int) (127 * sin(TWO_PI * (twinklecontrol + .6)));
       break;
     case 4: 
-      return 127 + (int) (127 * sin(TWO_PI * (blinkcontrol + .8)));
+      return 127 + (int) (127 * sin(TWO_PI * (twinklecontrol + .8)));
       break; 
    }
    
  
 }
-/*
-//death variables
-float dcontrol = 0;
-float drate = 30;
-uint8_t dbrightness = 0;
 
-void death(int i) {
-    //moving X moves a "line" across the X axis at the rate determined by dcontrol
-    float movingX = dcontrol*(WINDOW_X/2);
-    //moving Y moves a "line" down the y axis by doing some trig (based on dcontrol and drate (angle))
-    float movingY = (WINDOW_Y - (abs((dcontrol*(WINDOW_X)/2)*tan(drate))));
-      //brightness is determined by how far away y is multiplied by the movingY rate
-      dbrightness = (uint8_t) 48+((WINDOW_Y - leds[i].y)*(movingY));
-      if (leds[i].x < movingX) {
-        strip.setPixelColor(i, dbrightness, dbrightness, 0);
-      }
-}
-*/
-//
-// void temp_control(int i)
-// {
-//  uint32_t x = strip.getPixelColor(i);
-//  uint8_t oldb = x & 0xff;
-//  uint8_t oldg = (x >> 8) & 0xff;
-//  uint8_t oldr = (x >> 16) & 0xff;
-//  uint8_t bleh = x >> 24;
-//  
-//  strip.setPixelColor(i, temperature, 15 , 255-temperature);
-//  uint8_t r = temperature;
-//  uint8_t g = 15;
-//  uint8_t b = 255-temperature;
-//  
-//  float weightedr = r * (1 - victorycontrol) + oldr * victorycontrol;
-//  float weightedg = g * (1 - victorycontrol) + oldg * victorycontrol;
-//  float weightedb = b * (1 - victorycontrol) + oldb * victorycontrol;
-//  strip.setPixelColor(i, weightedr, weightedg, weightedb);
-//
-//  
-//    //strip.setPixelColor(i, value, value, value);
-//
-// }
-// 
-/*
-void game_plankton(int index, float control)
-{
-  //delay(50);
-  //Serial.println(control);
-  //Serial.println(balance);
-  uint8_t value;
-  switch(index % 5)
-  {
-    case 0: 
-      value = 127 + (int) (127 * sin(TWO_PI * control));
-      break;
-    case 1: 
-      value = 127 + (int) (127 * sin(TWO_PI * (control + .2)));
-      break;
-    case 2: 
-      value = 127 + (int) (127 * sin(TWO_PI * (control + .4)));
-      //leds[i].vibration = sin(TWO_PI * (float) ((counter + 160) % 400) / 400) + 1;
-      break;
-    case 3: 
-      value = 127 + (int) (127 * sin(TWO_PI * (control + .6)));
-      break;
-    case 4: 
-      value = 127 + (int) (127 * sin(TWO_PI * (control + .8)));
-      break;
-  }
-*/
-//  uint32_t x = strip.getPixelColor(index);
-//  uint8_t oldb = x & 0xff;
-//  uint8_t oldg = (x >> 8) & 0xff;
-//  uint8_t oldr = (x >> 16) & 0xff;
-//  uint8_t bleh = x >> 24;
-////  
-//    uint8_t newr = oldr * (victorycontrol) + value * (1-victorycontrol);
-//    uint8_t newg = oldg * (victorycontrol) + value * (1-victorycontrol);
-//    uint8_t newb = oldb * (victorycontrol) + value * (1-victorycontrol);
-//
-//    strip.setPixelColor(index, newr, newg, newb);
-//  strip.setPixelColor(index, value, value, value);
-//}
 
 //uint8_t average_value(uint8_t v1, uint8_t v2)
 //{
@@ -519,99 +452,62 @@ void calibrate(){
   state = 0;
 }
 
-void getEncoderData()
-{
-  int sensorValue1 = pulseIn(49, HIGH);
+ 
+void updateChem(int pin, chem* c){
+  int sensorValue = pulseIn(pin, HIGH);
   //int sensorValue2 = pulseIn(51, HIGH);
   //int sensorValue3 = pulseIn(53, HIGH);
 
 #ifdef DEBUG
-//  Serial.println(sensorValue3);
-//  Serial.println(sensorValue2);
-  Serial.println(sensorValue1);
+  Serial.println(sensorValue);
 #endif
+ // Serial.println(sensorValue);
 
-  diff1 = diff1 + (sensorValue1 - prevValue1) ;
+  c->diff = c->diff + (sensorValue - c->prev) ;
 
-  if (abs(diff1) > 600) {
-      diff1 = 0;
+  if (abs(c->diff) > 600) {
+      c->diff = 0;
   }
 
-//  diff2 = diff2 + (sensorValue2 - prevValue2) ;
-//
-//  if (abs(diff2) > 600) {
-//      diff2 = 0;
-//  }
-//
-//  diff3 = diff3 + (sensorValue3 - prevValue3) ;
-//
-//  if (abs(diff3) > 600) {
-//      diff3 = 0;
-//  }
-
-  float weighted1 = diff1 / 8;
-//  float weighted2 = diff2 / 8;
-//  float weighted3 = diff3 / 8;
+  float weighted = c->diff / 6;
   
-  if ((temperature + weighted1) < 0) {
-      temperature = 0;
+  float max_velocity = 4.0;
+  
+  if ((c->velocity + (weighted / 100.0)) < -max_velocity) {
+      c->velocity = -max_velocity;
       #ifdef DEBUG
       Serial.println("temperature reset ");
       #endif
   }
-  else if ((temperature + weighted1) > 255) {
-      temperature = 255;
+  else if ((c->velocity + (weighted / 100.0)) > max_velocity) {
+      c->velocity = max_velocity;
       #ifdef DEBUG
       Serial.println("temperature reset ");
       #endif
   }
-  else temperature += weighted1;
+  else{
+    c->velocity += (weighted /100.0) ;
+  }
+//  Serial.println(c->velocity);
+//  c->velocity = (raw_velocity - 127) / 100.0;
+  c->value += c->velocity;
+  if(c->value > 255)
+  {
+    c->value = 255;
+    c->velocity = 0; 
+  }
+  if(c->value < 0)
+  {
+    c->value = 0; 
+    c->velocity = 0;
+  }
   
-//  if ((nitrogen + weighted2) < 0) {
-//      nitrogen = 0;
-//      #ifdef DEBUG
-//      Serial.println("nitrogen reset");
-//      #endif
-//  }
-//  else if ((nitrogen + weighted2) > 255) {
-//      nitrogen = 255;
-//      #ifdef DEBUG
-//      Serial.println("temperature reset ");
-//      #endif
-//  }
-//  else nitrogen += weighted2;
-//
-//  if ((ph + weighted3) < 0) {
-//      ph = 0;
-//      #ifdef DEBUG
-//      Serial.println("ph reset");
-//      #endif
-//  }
-//  else if ((ph + weighted3) > 255) {
-//      ph = 255;
-//      #ifdef DEBUG
-//      Serial.println("temperature reset ");
-//      #endif
-//  }
-//  else mydata.ph += weighted3;
-
-  diff1 = diff1 % 8; 
-  //diff2 = diff2 % 8; 
-  //diff3 = diff3 % 8; 
-
-  prevValue1 = sensorValue1;
+  c->diff = c->diff % 8; 
+  
+  c->prev = sensorValue;
   //prevValue2 = sensorValue2;
   //prevValue3 = sensorValue3;
-
-#ifdef DEBUG
-    Serial.print("nitrogen = ");
-    Serial.println(nitrogen);
-    Serial.print("ph = ");
-    Serial.println(ph);
-    Serial.print("temperature = ");
-    Serial.println(temperature);
-#endif
-
+//  Serial.println(c->velocity);
 }
 
 
@@ -620,6 +516,7 @@ void init_leds()
   for(int i = 0; i < LIGHT_COUNT; ++i)
   {
     leds[i].id = i;
+    leds[i].alive = true;
     switch(i){
     case 0: 
       //leds[i].x = 215;
