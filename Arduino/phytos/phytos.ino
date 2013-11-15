@@ -18,6 +18,10 @@ Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 int balance = 0;
 int state = 0;
 int living_count = LIGHT_COUNT;
+unsigned long disinteraction_time = 0;
+unsigned long disinteraction_oldtime = 0;
+unsigned long disinteraction_limit = 20000;  //milliseconds
+int max_balance = 127;
 
 
 struct led
@@ -38,6 +42,9 @@ struct chem
 };
 
 void updateChem(int pin, chem* c);
+//I know, it's weird, but don't touch this declaration.
+//https://code.google.com/p/arduino/issues/detail?id=973
+//just ask me if you want to know
 
 
 chem temperature;
@@ -195,37 +202,41 @@ void game()
   
   ///////// These values must be calculated here otherwise updating takes too long.
   int rand = random(100);
-  double living_ratio = (LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
-  double living_modifier = 1 + 4 * (pow(5, (living_ratio - 2.5)));
+  double e = 2.71828;
+  double living_ratio = (LIGHT_COUNT - living_count) / double(LIGHT_COUNT);          
+  //double living_modifier  = 1 + 5 * (pow(5, (living_ratio - 2.5)));
+  //double dead_modifier = 1 + 5 * (pow(5, (1 - living_ratio - 2.5)));
+  double living_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (living_ratio - .5), 2)))  ;
+  double dead_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (1 - living_ratio - .5), 2)))  ;
+  double living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
+  double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
+  Serial.println(living_modifier);
   for(int i = 0; i < LIGHT_COUNT; i += 1)
   
   /////////
   {
     
-   
-    if(leds[i].alive)
-    {
-       if(shall_die(i, rand, living_modifier))
-       {
+    if(leds[i].alive){ 
+        if(shall_change(i, rand, living_modifier, balance)){
+         
          leds[i].alive = false;
          living_count--;
-         strip.setPixelColor(i, 0, 0, 0);
-       }
-    }
+         strip.setPixelColor(i, 0, 0, 0); 
+        }
     
-    if(!leds[i].alive)
-    {
-       if(shall_live_again(i, rand))
-       {
-          leds[i].alive = true;
+    }
+    else{
+       //living_modifier = 1 + 4 * (pow(5, (1 - living_ratio - 2.5)));
+       if(shall_change(i, rand, dead_modifier, max_balance - balance)){
+         leds[i].alive = true;
           living_count++;
+
        }
-          continue;
        
     }
-    
     char type = leds[i].type;
     uint8_t brightness = 0;
+    if(!leds[i].alive) continue;
     switch(type)
     {
      case PLANKTON:    
@@ -235,6 +246,8 @@ void game()
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
        strip.setPixelColor(i, 255 - brightness, 10, brightness);
+       //strip.setPixelColor(i, brightness, 10,255 - brightness);
+
        break; 
      default:
        break;
@@ -263,7 +276,6 @@ void game()
 
           break;
 */
-//   control = control + (( (float) balance) / (float) 4000);
    control = control + .019;
    if (control >= 1) 
    {
@@ -276,32 +288,19 @@ void game()
    }
 }
 
-boolean shall_die(int i, int rand, double living_modifier)
+boolean shall_change(int i, int rando, double living_modifier, int b)
 {
+   int rand = micros() % 101;
    //if(((i + (rand * millis())) % LIGHT_COUNT) == 0){
      //Serial.println( 1 + (pow(5, (living_ratio - 0.5) * 4 ) / 25.0));
-     double random_calculated = ((i + (rand * millis())) % LIGHT_COUNT) / (double(LIGHT_COUNT));
-     if( random_calculated * balance * rand * ( living_modifier) > 12000){
+     //double random_calculated = ((i + (rand * millis())) % LIGHT_COUNT) / (double(LIGHT_COUNT));
+     if(b * rand * living_modifier > 12700){
        //if( random_calculated * balance * rand * ( 1 ) > 11500){
-
+       //Serial.println("Die.");
        return true;
      }
    
    return false;
-}
-
-boolean shall_live_again(int i, int rand)
-{
-  if(balance > 30)
-  {
-    return false;
-  }
-  if(balance * rand > 29000)
-  {
-//    Serial.println("revived");
-    return true;
-  }
-  return false;
 }
 
 /*
@@ -468,6 +467,8 @@ void updateChem(int pin, chem* c){
   //int sensorValue2 = pulseIn(51, HIGH);
   //int sensorValue3 = pulseIn(53, HIGH);
 
+
+ 
 #ifdef DEBUG
   Serial.println(sensorValue);
 #endif
@@ -481,16 +482,38 @@ void updateChem(int pin, chem* c){
 
   float weighted = c->diff / 6;
   
-  float max_velocity = 2.0;
-  
-  if ((c->velocity + (weighted / 100.0)) < -max_velocity) {
-      c->velocity = -max_velocity;
-  }
-  else if ((c->velocity + (weighted / 100.0)) > max_velocity) {
-      c->velocity = max_velocity;
+  unsigned long time = millis();
+
+  if(abs(weighted) > 1){
+    disinteraction_time = 0; // This MIGHT break if the user turns the knob really slowly.  Make more robust
   }
   else{
-    c->velocity += (weighted /100.0) ;
+    disinteraction_time += time - disinteraction_oldtime;
+  }
+  disinteraction_oldtime = time;
+
+  //Serial.println(weighted);
+  
+  float max_velocity = 2.0;
+  if (disinteraction_time < disinteraction_limit){
+    
+    if ((c->velocity + (weighted / 100.0)) < -max_velocity) {
+        c->velocity = -max_velocity;
+    }
+    else if ((c->velocity + (weighted / 100.0)) > max_velocity) {
+        c->velocity = max_velocity;
+    }
+    else{
+      c->velocity += (weighted /100.0) ;
+    }
+  }
+  else{
+    if(c->value > 127){
+      c->velocity = -.2;
+    }
+    else{
+      c->velocity = .2; 
+    }
   }
   //Serial.println(c->velocity);
 //  c->velocity = (raw_velocity - 127) / 100.0;
