@@ -20,9 +20,10 @@ int state = 0;
 int living_count = LIGHT_COUNT;
 unsigned long disinteraction_time = 0;
 unsigned long disinteraction_oldtime = 0;
-unsigned long disinteraction_limit = 20000;  //milliseconds
+unsigned long disinteraction_limit = 15000;  //milliseconds
 int max_balance = 127;
 
+int tempByte = 127;
 
 struct led
 {
@@ -95,11 +96,6 @@ void setup() {
   
   ph.value = 127;
   nitrogen.value = 127;
-  //sets up easytransfer for mydata and the serial port address
-//  ET.begin(details(mydata), &Serial);
-
-//  mydata.state = SLEEP;
-  //mydata.state = 5;
 }
 
 
@@ -112,6 +108,10 @@ void loop() {
     //Serial.println(state);
   
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
+  if(Serial.available() > 0)
+  {
+     tempByte = Serial.read(); 
+  }
   balance = abs(temperature.value - 127);
   updateChem(49, &temperature);
   
@@ -194,23 +194,19 @@ float control = 0;
 float twinklecontrol = 0;
 void game()
 {
-  
+  int rand = random(100);
+  double e = 2.71828;
+  double living_ratio = double(LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
+  double living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
+  double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
+  Serial.println(temperature.value);
   //balance - this basically determines what state we go into
   // balance < 25 -> win
   // balance > 300 -> loing
   //Serial.println(random(10));
   
   ///////// These values must be calculated here otherwise updating takes too long.
-  int rand = random(100);
-  double e = 2.71828;
-  double living_ratio = (LIGHT_COUNT - living_count) / double(LIGHT_COUNT);          
-  //double living_modifier  = 1 + 5 * (pow(5, (living_ratio - 2.5)));
-  //double dead_modifier = 1 + 5 * (pow(5, (1 - living_ratio - 2.5)));
-  double living_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (living_ratio - .5), 2)))  ;
-  double dead_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (1 - living_ratio - .5), 2)))  ;
-  double living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
-  double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
-  Serial.println(living_modifier);
+  //update_life();
   for(int i = 0; i < LIGHT_COUNT; i += 1)
   
   /////////
@@ -245,8 +241,8 @@ void game()
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
-       strip.setPixelColor(i, 255 - brightness, 10, brightness);
-       //strip.setPixelColor(i, brightness, 10,255 - brightness);
+       //strip.setPixelColor(i, 255 - brightness, 10, brightness);
+       strip.setPixelColor(i, brightness, 10,255 - brightness);
 
        break; 
      default:
@@ -276,7 +272,7 @@ void game()
 
           break;
 */
-   control = control + .019;
+   control = control + .0095;
    if (control >= 1) 
    {
      control -= 1;
@@ -294,7 +290,7 @@ boolean shall_change(int i, int rando, double living_modifier, int b)
    //if(((i + (rand * millis())) % LIGHT_COUNT) == 0){
      //Serial.println( 1 + (pow(5, (living_ratio - 0.5) * 4 ) / 25.0));
      //double random_calculated = ((i + (rand * millis())) % LIGHT_COUNT) / (double(LIGHT_COUNT));
-     if(b * rand * living_modifier > 12700){
+     if(b * rand > 12600){
        //if( random_calculated * balance * rand * ( 1 ) > 11500){
        //Serial.println("Die.");
        return true;
@@ -303,6 +299,44 @@ boolean shall_change(int i, int rando, double living_modifier, int b)
    return false;
 }
 
+void update_life(){
+  int rand = random(100);
+  double e = 2.71828;
+  double living_ratio = double(LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
+  //double living_modifier  = 1 + 5 * (pow(5, (living_ratio - 2.5)));
+  //double dead_modifier = 1 + 5 * (pow(5, (1 - living_ratio - 2.5)));
+//  double living_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (living_ratio - .5), 2)))  ;
+//  double dead_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (1 - living_ratio - .5), 2)))  ;
+//  double living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
+//  double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
+  //Serial.println(living_modifier);
+  double living_modifier = pow(2.71828, 5 * (living_ratio + .5)) / 100.0;
+  //Serial.println(living_modifier);
+  double dead_modifier = pow(2.71828, 5 * ((1 - living_ratio) + .5)) / 100.0;
+  int living_index = (int) (living_modifier * (balance / 10.0));
+  int dead_index = dead_modifier * ((127 - balance) / 10.0);
+  Serial.println(living_index);
+  for(int i = 0; i < living_index; ++i){
+     int chosen = millis() % 500;
+     if (chosen < LIGHT_COUNT){
+
+            leds[chosen].alive = false;
+            living_count--;
+            strip.setPixelColor(chosen, 0, 0, 0); 
+         }
+     }  
+  
+  for(int i = 0; i < dead_index; ++i){
+     int chosen = millis() % 500;
+     if (chosen < LIGHT_COUNT){
+        if(!leds[chosen].alive){
+           leds[chosen].alive = true;
+           living_count++;
+        }
+     } 
+  }
+  
+}
 /*
 void tint_plankton(id)
 {
@@ -336,20 +370,35 @@ uint8_t get_brightness_chem(int id)
                        break;
     default: relevant_value = nitrogen.value;    
    }
-   int distance =  relevant_value - leds[id].y * (double) ( 255.0 / WINDOW_Y) ;
-   
-   if(distance < -25)
+   //int distance = leds[id].y * (double) ( 255.0 / WINDOW_Y) - relevant_value ;
+   int distance =  (255 - relevant_value) -leds[id].y * (double) ( 255.0 / WINDOW_Y) ;
+
+   if(distance < -50)
    {
       return 255; 
    }
-   else if (distance > 25)
+   else if (distance > 50)
    {
       return 0; 
    }
    else
    {
-      return (255 / 50.0) * (50 -  (distance + 25)); 
+      return (255 / 100.0) * (100 -  (distance + 50)); 
    }
+
+//   if(distance > 25)
+//   {
+//      return 255; 
+//   }
+//   else if (distance < -25)
+//   {
+//      return 0; 
+//   }
+//   else
+//   {
+//      return (255 / 50.0) * (50 -  (distance + 25)); 
+//   }
+
    
 }
 
@@ -497,18 +546,18 @@ void updateChem(int pin, chem* c){
   float max_velocity = 2.0;
   if (disinteraction_time < disinteraction_limit){
     
-    if ((c->velocity + (weighted / 100.0)) < -max_velocity) {
+    if ((c->velocity - (weighted / 100.0)) < -max_velocity) {
         c->velocity = -max_velocity;
     }
-    else if ((c->velocity + (weighted / 100.0)) > max_velocity) {
+    else if ((c->velocity - (weighted / 100.0)) > max_velocity) {
         c->velocity = max_velocity;
     }
     else{
-      c->velocity += (weighted /100.0) ;
+      c->velocity -= (weighted /100.0) ;
     }
   }
   else{
-    if(c->value > 127){
+    if(c->value >= tempByte){
       c->velocity = -.2;
     }
     else{
@@ -674,12 +723,12 @@ void init_leds()
     case 25: 
       //leds[i].x = 18;
       leds[i].y = 228;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 26: 
       //leds[i].x = 13;
       leds[i].y = 235;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 27: 
       //leds[i].x = 12;
@@ -810,17 +859,17 @@ void init_leds()
     case 52: 
       //leds[i].x = 22;
       leds[i].y = 160;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 53: 
       //leds[i].x = 22;
       leds[i].y = 167;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 54: 
       //leds[i].x = 22;
       leds[i].y = 121;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 55: 
       //leds[i].x = 22;
