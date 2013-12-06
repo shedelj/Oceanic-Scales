@@ -21,9 +21,13 @@ int living_count = LIGHT_COUNT;
 unsigned long disinteraction_time = 0;
 unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
+
+unsigned long pulldown_time = 0;
+unsigned long pulldown_oldtime = 0;
+unsigned long pulldown_limit = 30000;
 int max_balance = 127;
 
-int tempByte = 127;
+int tempByte = 0;
 
 struct led
 {
@@ -557,7 +561,9 @@ void updateChem(int pin, chem* c){
     }
   }
   else{
-    if(c->value >= tempByte){
+    int b = 127;
+    if (disinteraction_time > pulldown_limit) b = tempByte;
+    if(c->value >= b){
       c->velocity = -.2;
     }
     else{
