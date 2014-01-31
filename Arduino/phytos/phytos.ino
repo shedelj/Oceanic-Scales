@@ -6,7 +6,6 @@
 #define CLOCK_PIN (3)
 
 #define LIGHT_COUNT (64)
-#define SB_BUFFER_SIZE (64)
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
 
@@ -24,10 +23,10 @@ unsigned long disinteraction_limit = 15000;  //milliseconds
 
 unsigned long pulldown_time = 0;
 unsigned long pulldown_oldtime = 0;
-unsigned long pulldown_limit = 30000;
+unsigned long pulldown_limit = 45000;
 int max_balance = 127;
 
-int tempByte = 0;
+//int tempByte = 127; //default resting value
 
 struct led
 {
@@ -44,6 +43,8 @@ struct chem
   int prev;
   int diff;
   float velocity;
+  float resting_value;
+  uint8_t timelapsevals[365];
 };
 
 void updateChem(int pin, chem* c);
@@ -94,12 +95,14 @@ void setup() {
   strip.show();
   
   temperature.value = 127;
+  temperature.resting_value = 127;
   temperature.prev = 0;
   temperature.diff = 0;
   temperature.velocity = 0;
   
   ph.value = 127;
   nitrogen.value = 127;
+  
 }
 
 
@@ -114,7 +117,7 @@ void loop() {
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
   if(Serial.available() > 0)
   {
-     tempByte = Serial.read(); 
+     temperature.resting_value = Serial.read(); 
   }
   balance = abs(temperature.value - 127);
   updateChem(49, &temperature);
@@ -139,76 +142,50 @@ void loop() {
   
   strip.show();
 }
-/*
-int rgbShiftCalc (int next, int current, int sep){
-  int value1;
-  value1 = (((next - current)/sep)*mydata.nitrogen + current); 
-  return (int) value1;
-};
 
+void serialEvent()
+{
+  timelapsei = 0;
+  while(timelapsei < 365)
+  {
+    while(Serial.available())
+    { 
+       temperature.timelapsevalues[timelapsei++] = Serial.read();
+    }
+  }
+}
 
-void nitroColor(int i){
-   int r=0;
-   int b=0;
-   int g=0;
-   int nitro = mydata.nitrogen;
-   if (nitro < 37){
-     r = rgbShiftCalc(144,96,38);
-     g =  rgbShiftCalc(56,62,38);
-     b = rgbShiftCalc(238,66,38);
-   }
-   else if (nitro < 74){
-     r = rgbShiftCalc(238,144,38);
-     g =  rgbShiftCalc(66,62,38);
-     b = rgbShiftCalc(39,31,38);
-   }
-   else if (nitro < 111){
-     r = rgbShiftCalc(240,238,38);
-     g =  rgbShiftCalc(90,66,38);
-     b = rgbShiftCalc(40,39,38);
-   }
-   else if (nitro < 148){
-     r = rgbShiftCalc(247,240,38);
-     g =  rgbShiftCalc(147,90,38);
-     b = rgbShiftCalc(29,40,38);
-   }
-   else if (nitro < 185){
-     r = rgbShiftCalc(255,247,38);
-     g =  rgbShiftCalc(221,147,38);
-     b = rgbShiftCalc(22,29,38);
-   }
-   else if (nitro < 222){
-     r = rgbShiftCalc(0,255,38);
-     g =  rgbShiftCalc(165,221,38);
-     b = rgbShiftCalc(80,22,38);
-   }
-   
-//        96,62,66   
-//        144,62,31
-//        238,66,39
-//        240,90,40
-//        247,147,29
-//        255,221,22
-//        0,165,80
-  strip.setPixelColor(i, r, g, b);
-};
-*/
+int timelapsei = 0;
 
+unsigned long timelapsetime = 0;
+void lapse()
+{
+  unsigned long oldtime = timelapsetime;
+  timelapsetime = millis();
+  if (timelapsetime % 5000 > oldtime % 5000) 
+  {
+    temperature.resting_value = timelapsevalues[i];
+  } 
+}
+
+boolean timelapse = false;
 float control = 0; 
 float twinklecontrol = 0;
 void game()
 {
+  if(timelapse)
+  {
+    lapse(); 
+  }
   int rand = random(100);
   double e = 2.71828;
   double living_ratio = double(LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
   double living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
   double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
-  Serial.println(temperature.value);
+  //Serial.println(temperature.value);
   //balance - this basically determines what state we go into
-  // balance < 25 -> win
-  // balance > 300 -> loing
-  //Serial.println(random(10));
-  
+  float shift = (float) balance / 127;
+
   ///////// These values must be calculated here otherwise updating takes too long.
   //update_life();
   for(int i = 0; i < LIGHT_COUNT; i += 1)
@@ -236,6 +213,10 @@ void game()
     }
     char type = leds[i].type;
     uint8_t brightness = 0;
+    uint8_t pv;
+    float r;
+    float b;
+
     if(!leds[i].alive) continue;
     switch(type)
     {
@@ -245,9 +226,18 @@ void game()
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
-       //strip.setPixelColor(i, 255 - brightness, 10, brightness);
-       strip.setPixelColor(i, brightness, 10,255 - brightness);
+       strip.setPixelColor(i, brightness, 10, 255 - brightness);
+       //uint8_t r = brightness;
+       //uint8_t b = 255 - brightness
+       //pv = pulse_value(i);
+       //r = shift * brightness + ((1 - shift) * (pv / 256.0));
+       //b = shift * (255 - brightness) + ((1- shift)* (pv / 256.0));
 
+       //b = (255 - brightness) * (pv / 256.0);
+       //b = 0;
+       //if (i == 43) Serial.println((1 - shift) * pv);
+       //strip.setPixelColor(i, r, 0, b);
+       //float weighted_average = ((float) twinkle_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
        break; 
      default:
        break;
@@ -255,27 +245,7 @@ void game()
     }
     
   }
-/*
-    else
-    {
-      switch(leds[i].type)
-      {
-        case TEMPERATURE:
-          //value between RED and BLUE
-          strip.setPixelColor(i, mydata.temperature, 15 , 255- mydata.temperature);
-          break;
-        case PH:
-          //value between BLUE and GREEN
-          strip.setPixelColor(i, 15, 255 - mydata.ph, mydata.ph);
-          break;
-        case NITROGEN: 
-//          if (mydata.nitrogen <  127) strip.setPixelColor(i, (mydata.nitrogen * 2) , 0, 5);
-//          else strip.setPixelColor(i, 255 - (mydata.nitrogen - 127) * 2, (mydata.nitrogen - 127)* 2, 5);
-        //  strip.setPixelColor(i,255 -  mydata.nitrogen, ((mydata.nitrogen+ 1) / .6667 + 83) , 5);
-            strip.setPixelColor(i,255 -  mydata.nitrogen, mydata.nitrogen / 2 + 127 , 5);
 
-          break;
-*/
    control = control + .0095;
    if (control >= 1) 
    {
@@ -286,6 +256,7 @@ void game()
    {
      twinklecontrol -=1;
    }
+   
 }
 
 boolean shall_change(int i, int rando, double living_modifier, int b)
@@ -319,7 +290,7 @@ void update_life(){
   double dead_modifier = pow(2.71828, 5 * ((1 - living_ratio) + .5)) / 100.0;
   int living_index = (int) (living_modifier * (balance / 10.0));
   int dead_index = dead_modifier * ((127 - balance) / 10.0);
-  Serial.println(living_index);
+  //Serial.println(living_index);
   for(int i = 0; i < living_index; ++i){
      int chosen = millis() % 500;
      if (chosen < LIGHT_COUNT){
@@ -355,9 +326,10 @@ void tint_plankton(id)
 */
 uint8_t get_brightness_plankton(int id)
 {
-//  float shift = (float) balance / (127 * 3);
+  //float shift = (float) balance / (127 * 3);
   float shift = (float) balance / (127 );
   float weighted_average = ((float) twinkle_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
+
   return (uint8_t) weighted_average;
 }
 
@@ -376,19 +348,27 @@ uint8_t get_brightness_chem(int id)
    }
    //int distance = leds[id].y * (double) ( 255.0 / WINDOW_Y) - relevant_value ;
    int distance =  (255 - relevant_value) -leds[id].y * (double) ( 255.0 / WINDOW_Y) ;
-
+   
+   int raw_brightness = 0;
+   
    if(distance < -50)
    {
-      return 255; 
+      raw_brightness =  255; 
    }
    else if (distance > 50)
    {
-      return 0; 
+      raw_brightness = 0; 
    }
    else
    {
-      return (255 / 100.0) * (100 -  (distance + 50)); 
+      raw_brightness =  (255 / 100.0) * (100 -  (distance + 50)); 
    }
+   
+   
+    //float shift = (float) balance / (127);
+    //float weighted_average = ((float) raw_brightness * shift) + ((float) pulse_value(id) * (1- shift));
+    //return (uint8_t) weighted_average;
+    return raw_brightness;
 
 //   if(distance > 25)
 //   {
@@ -402,8 +382,6 @@ uint8_t get_brightness_chem(int id)
 //   {
 //      return (255 / 50.0) * (50 -  (distance + 25)); 
 //   }
-
-   
 }
 
 uint8_t pulse_value(int id)
@@ -562,7 +540,7 @@ void updateChem(int pin, chem* c){
   }
   else{
     int b = 127;
-    if (disinteraction_time > pulldown_limit) b = tempByte;
+    if (disinteraction_time > pulldown_limit) b = c->resting_value;
     if(c->value >= b){
       c->velocity = -.2;
     }
