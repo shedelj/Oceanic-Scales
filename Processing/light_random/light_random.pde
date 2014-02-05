@@ -6,6 +6,8 @@ int windowX = 1200;
 int windowY = 600;
 int sqrlen = 20;
 
+int BASE_VALUE = 255;
+
 boolean interacted = false;
 //int LIGHT_COUNT = 400;
 
@@ -36,7 +38,7 @@ class led
 
 class chem
 {
-  int value;
+  float value;
   int prev;
   int diff;
   float velocity;
@@ -68,7 +70,7 @@ led leds[] = new led[LIGHT_COUNT];
 
 void setup() {
   size(windowX, windowY);
-  background(0);
+
   colorMode(RGB);
   //set up the grid
   for(int i = 0; i < LIGHT_COUNT; ++i)
@@ -76,6 +78,7 @@ void setup() {
     led newled = new led();
     newled.id = i;
     newled.type = i%2; 
+    newled.alive = true;
     newled.x = (int) (Math.random() * ((windowX / 3) - sqrlen));
     newled.y = (int) (Math.random() * ((windowY) - sqrlen));
     if(i > LIGHT_COUNT / 3){
@@ -107,12 +110,16 @@ void setup() {
 
 
 void draw() {
-  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
+    background(0);
+  balance = (int) (abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127));
   //updateChem(49, &temperature);
   updateChem(temperature);
   updateChem(nitrogen);
   updateChem(ph);
-  println(temperature.velocity);
+  stroke(255, 255,255);
+  line(windowX / 3, 0, windowX / 3, windowY);
+  line(windowX * 2 / 3, 0, windowX * 2 / 3, windowY);
+  stroke(0,0,0);
   game();
   
 
@@ -137,7 +144,7 @@ float control = 0;
 float twinklecontrol = 0;
 void game()
 {
-
+  //println(temperature.value);
   int rand = (int) random(100);
   float e = 2.71828;
   float living_ratio = float(LIGHT_COUNT - living_count) / float(LIGHT_COUNT);
@@ -148,28 +155,35 @@ void game()
   float shift = (float) balance / 127;
 
   ///////// These values must be calculated here otherwise updating takes too long.
-  //update_life();
+
   for(int i = 0; i < LIGHT_COUNT; i += 1)
   
   /////////
   {
     
-   /* if(leds[i].alive){ 
+      update_life(i, rand, living_modifier, balance);
+    /*
+    if(leds[i].alive){ 
+      //println("alive");
         if(shall_change(i, rand, living_modifier, balance)){
-         
+
          leds[i].alive = false;
          living_count--;
-         fill(0,0,0);
-
+         //fill(0,0,0);
+         continue;
         }
     
     }
     else{
        //living_modifier = 1 + 4 * (pow(5, (1 - living_ratio - 2.5)));
+         //println("died");
        if(shall_change(i, rand, dead_modifier, max_balance - balance)){
          leds[i].alive = true;
           living_count++;
 
+       }
+       else{
+         continue;
        }
        
     }*/
@@ -184,6 +198,7 @@ void game()
     {
      case 0:    //plankton
        brightness = get_brightness_plankton(i);
+       //println(brightness);
        fill(brightness, brightness, brightness);
        //strip.setPixelColor(i, brightness, brightness, brightness);
        break;
@@ -191,6 +206,7 @@ void game()
        brightness = get_brightness_chem(i);
        //strip.setPixelColor(i, brightness, 10, 255 - brightness);
        fill(brightness, 10, 255 - brightness);
+       //println(brightness);
        //int r = brightness;
        //int b = 255 - brightness
        //pv = pulse_value(i);
@@ -207,8 +223,9 @@ void game()
        brightness = get_brightness_chem(i);
        fill(255 - brightness, brightness, 10);
        break;
-     case 3:
+     case 3: //ph
        brightness = get_brightness_chem(i);
+
        fill(10, 255 - brightness, brightness);
        break;
      default:
@@ -216,7 +233,7 @@ void game()
       
     }
 
-    rect(leds[i].x, leds[i].y, sqrlen, sqrlen);
+    ellipse(leds[i].x, leds[i].y, sqrlen, sqrlen);
     
   }
 
@@ -230,7 +247,6 @@ void game()
    {
      twinklecontrol -=1;
    }
-   
 }
 
 boolean shall_change(int i, int rando, float living_modifier, int b)
@@ -239,7 +255,7 @@ boolean shall_change(int i, int rando, float living_modifier, int b)
    //if(((i + (rand * millis())) % LIGHT_COUNT) == 0){
      //Serial.println( 1 + (pow(5, (living_ratio - 0.5) * 4 ) / 25.0));
      //float random_calculated = ((i + (rand * millis())) % LIGHT_COUNT) / (float(LIGHT_COUNT));
-     if(b * rand > 12600){
+     if(b * rand > 37000){
        //if( random_calculated * balance * rand * ( 1 ) > 11500){
        //Serial.println("Die.");
        return true;
@@ -248,43 +264,11 @@ boolean shall_change(int i, int rando, float living_modifier, int b)
    return false;
 }
 
-void update_life(){
-  int rand = (int) random(100);
-  float e = 2.71828;
-  float living_ratio = float(LIGHT_COUNT - living_count) / float(LIGHT_COUNT);
-  //float living_modifier  = 1 + 5 * (pow(5, (living_ratio - 2.5)));
-  //float dead_modifier = 1 + 5 * (pow(5, (1 - living_ratio - 2.5)));
-//  float living_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (living_ratio - .5), 2)))  ;
-//  float dead_modifier_gaussian = 1 + 5 * (pow(2.71828, pow(-10.0 * (1 - living_ratio - .5), 2)))  ;
-//  float living_modifier = 1 + pow(e, living_ratio * 2) / 5.0; 
-//  float dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
-  //Serial.println(living_modifier);
-  float living_modifier = pow(2.71828, 5 * (living_ratio + .5)) / 100.0;
-  //Serial.println(living_modifier);
-  float dead_modifier = pow(2.71828, 5 * ((1 - living_ratio) + .5)) / 100.0;
-  int living_index = (int) (living_modifier * (balance / 10.0));
-  int dead_index = (int) (dead_modifier * ((127 - balance) / 10.0));
-  //Serial.println(living_index);
-  for(int i = 0; i < living_index; ++i){
-     int chosen = millis() % 500;
-     if (chosen < LIGHT_COUNT){
-
-            leds[chosen].alive = false;
-            living_count--;
-            //strip.setPixelColor(chosen, 0, 0, 0); 
-         }
-     }  
-  
-  for(int i = 0; i < dead_index; ++i){
-     int chosen = millis() % 500;
-     if (chosen < LIGHT_COUNT){
-        if(!leds[chosen].alive){
-           leds[chosen].alive = true;
-           living_count++;
-        }
-     } 
+boolean update_life(int i, int rando, float modifer, int b){
+  if (b * rando > 37000){
+     leds[i].alive = !leds[i].alive; 
   }
-  
+  return leds[i].alive;
 }
 /*
 void tint_plankton(id)
@@ -309,7 +293,7 @@ int get_brightness_plankton(int id)
 
 int get_brightness_chem(int id)
 {  
-   int relevant_value;
+   float relevant_value;
    switch(leds[id].type)
    {
      case 2: relevant_value = nitrogen.value; //NITROGEN
@@ -390,31 +374,30 @@ int twinkle_value(int id)
 
 void keyPressed(){
   if (key == 'q'){
-    temperature.velocity += .05; 
+    temperature.velocity += .04; 
   }
   if(key == 'e'){
-    temperature.velocity -= .05; 
+    temperature.velocity -= .04; 
   }
     if(key == 'a'){
-    nitrogen.velocity += .05; 
+    nitrogen.velocity += .04; 
   }
     if(key == 'd'){
-    nitrogen.velocity -= .05; 
+    nitrogen.velocity -= .04; 
   }
     if(key == 'z'){
-    ph.velocity += .05; 
+    ph.velocity += .04; 
   }
     if(key == 'c'){
-    ph.velocity -= .05; 
+    ph.velocity -= .04; 
   }
   interacted = true;
 }
 
 void updateChem(chem c){
   //c.value += c.velocity;
-  
+  println(c.velocity);
   long time = millis();
-
   
   if(interacted){
     disinteraction_time = 0; // This MIGHT break if the user turns the knob really slowly.  Make more robust
@@ -441,7 +424,7 @@ void updateChem(chem c){
   }
   //Serial.println(c->velocity);
 //  c->velocity = (raw_velocity - 127) / 100.0;
-  c.value += c.velocity;
+  c.value = c.value + c.velocity;
   if(c.value > 255)
   {
     c.value = 255;
