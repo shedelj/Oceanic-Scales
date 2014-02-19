@@ -1,0 +1,5 @@
+
+
+
+%: cd /Users/oceanic_scales/Oceanic-Scales/pulldown_test
+%: bash update.sh
