@@ -25,6 +25,12 @@ long disinteraction_time = 0;
  long pulldown_limit = 45000;
 int max_balance = 127;
 
+int[] temperature_lapse = new int[365];
+int[] nitrogen_lapse = new int[365];
+int[] ph_lapse = new int[365];
+
+long visualize_time = -1;
+
 //int tempByte = 127; //default resting value
 
 class led
@@ -79,7 +85,7 @@ void setup() {
     newled.id = i;
     newled.type = i%2; 
     newled.alive = true;
-    newled.x = (int) (Math.random() * ((windowX / 3) - sqrlen));
+    newled.x = (int) (Math.random() * ((windowX / 3) - sqrlen));// + sqrlen / 2;
     newled.y = (int) (Math.random() * ((windowY) - sqrlen));
     if(i > LIGHT_COUNT / 3){
             //println("Here.");
@@ -105,12 +111,18 @@ void setup() {
   
   ph.value = 127;
   nitrogen.value = 127;
+  temperature_lapse[0] = nitrogen_lapse[0] = ph_lapse[0] = 127;
+  for(int i = 1; i < temperature_lapse.length; ++i){
+      temperature_lapse[i] = temperature_lapse[i - 1] + (int) random(3) - 1;
+      nitrogen_lapse[i] = nitrogen_lapse[i - 1] + (int) random(3) - 1;
+      ph_lapse[i] = ph_lapse[i - 1] + (int) random(3) - 1;
+  }
   
 }
 
 
 void draw() {
-    background(0);
+  background(0);
   balance = (int) (abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127));
   //updateChem(49, &temperature);
   updateChem(temperature);
@@ -120,7 +132,12 @@ void draw() {
   line(windowX / 3, 0, windowX / 3, windowY);
   line(windowX * 2 / 3, 0, windowX * 2 / 3, windowY);
   stroke(0,0,0);
-  game();
+  if (disinteraction_time > 30000)
+  {
+     visualize() ;
+  }
+    game();
+  
   
 
 }
@@ -139,6 +156,21 @@ void lapse()
   } 
 }
 */
+void visualize()
+{
+   if (visualize_time == -1) visualize_time = millis();
+   int index = (int) (((millis() - visualize_time) / 250) % temperature_lapse.length);
+   int temperature_target = temperature_lapse[index];
+   //int nitrogen_target = nitrogen_lapse[index];
+   //int ph_target = ph_lapse[index];
+   
+   temperature.value +=   (temperature_target - temperature.value) / 5;
+   
+   
+   //c.velocity = (127 - c.value) / 100.0;
+}
+
+
 boolean timelapse = false;
 float control = 0; 
 float twinklecontrol = 0;
@@ -155,38 +187,14 @@ void game()
   float shift = (float) balance / 127;
 
   ///////// These values must be calculated here otherwise updating takes too long.
-
+  update_life(0, rand, living_modifier, balance);
   for(int i = 0; i < LIGHT_COUNT; i += 1)
-  
   /////////
   {
-    
-      update_life(i, rand, living_modifier, balance);
-    /*
-    if(leds[i].alive){ 
-      //println("alive");
-        if(shall_change(i, rand, living_modifier, balance)){
+      if(!leds[i].alive) {
+        continue;
+      }
 
-         leds[i].alive = false;
-         living_count--;
-         //fill(0,0,0);
-         continue;
-        }
-    
-    }
-    else{
-       //living_modifier = 1 + 4 * (pow(5, (1 - living_ratio - 2.5)));
-         //println("died");
-       if(shall_change(i, rand, dead_modifier, max_balance - balance)){
-         leds[i].alive = true;
-          living_count++;
-
-       }
-       else{
-         continue;
-       }
-       
-    }*/
     int type = leds[i].type;
     int brightness = 0;
     int pv;
@@ -233,7 +241,8 @@ void game()
       
     }
 
-    ellipse(leds[i].x, leds[i].y, sqrlen, sqrlen);
+    if (leds[i].type == 0) ellipse(leds[i].x + sqrlen / 2, leds[i].y, sqrlen, sqrlen);
+    else rect(leds[i].x, leds[i].y, sqrlen, sqrlen);
     
   }
 
@@ -264,11 +273,31 @@ boolean shall_change(int i, int rando, float living_modifier, int b)
    return false;
 }
 
-boolean update_life(int i, int rando, float modifer, int b){
-  if (b * rando > 37000){
+void update_life(int i, int rando, float modifer, int b){
+  /*
+  int rand = millis() % 101;
+  if (!leds[i].alive) b = 255 - b;
+  if (b * rand > 37000){
      leds[i].alive = !leds[i].alive; 
   }
   return leds[i].alive;
+*/
+  int count = b / 10;
+  for(int it = 0; it < count; ++it){
+    int rand = millis() % LIGHT_COUNT;
+    if (rand < LIGHT_COUNT && leds[rand].alive){
+      leds[rand].alive = false;
+      living_count--;
+    }
+  }
+  for(int it = 0; it < 10 - count; ++it){
+    int rand = millis() % LIGHT_COUNT;
+    if (rand < LIGHT_COUNT && !leds[rand].alive){
+      leds[rand].alive = true;
+      living_count++;
+    }
+  }
+
 }
 /*
 void tint_plankton(id)
@@ -285,6 +314,16 @@ void tint_plankton(id)
 int get_brightness_plankton(int id)
 {
   //float shift = (float) balance / (127 * 3);
+  float relevant_value;
+  if(id < LIGHT_COUNT / 3) relevant_value = temperature.value;
+  else if(id < LIGHT_COUNT * 2 / 3) relevant_value = nitrogen.value;
+  else relevant_value = ph.value;
+  
+  int distance =  (int) ((255 - relevant_value) - leds[id].y * (float) ( 255.0 / windowY)) ;
+  if(abs(distance) > 200) {
+     leds[id].alive = false; 
+  }
+  
   float shift = (float) balance / (127 );
   float weighted_average = ((float) twinkle_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
 
@@ -309,17 +348,17 @@ int get_brightness_chem(int id)
    
    int raw_brightness = 0;
    
-   if(distance < -50)
+   if(distance < -100)
    {
       raw_brightness =  255; 
    }
-   else if (distance > 50)
+   else if (distance > 100)
    {
       raw_brightness = 0; 
    }
    else
    {
-      raw_brightness =  (int)((255 / 100.0) * (100 -  (distance + 50))); 
+      raw_brightness =  (int)((255 / 200.0) * (200 -  (distance + 100))); 
    }
    
    
@@ -375,33 +414,41 @@ int twinkle_value(int id)
 void keyPressed(){
   if (key == 'q'){
     temperature.velocity += .04; 
+    nitrogen.velocity -= .01;
   }
   if(key == 'e'){
-    temperature.velocity -= .04; 
+    temperature.velocity -= .04;
+    nitrogen.velocity -= .015; 
   }
     if(key == 'a'){
-    nitrogen.velocity += .04; 
+    nitrogen.velocity += .04;
+    ph.velocity -= .015;
+     
   }
     if(key == 'd'){
-    nitrogen.velocity -= .04; 
+    nitrogen.velocity -= .04;
+    ph.velocity -= .01; 
   }
     if(key == 'z'){
-    ph.velocity += .04; 
+    ph.velocity += .04;
+    nitrogen.velocity += .01; 
   }
     if(key == 'c'){
     ph.velocity -= .04; 
+    temperature.velocity -= .01;
   }
   interacted = true;
 }
 
 void updateChem(chem c){
   //c.value += c.velocity;
-  println(c.velocity);
+  //println(c.velocity);
   long time = millis();
   
   if(interacted){
-    disinteraction_time = 0; // This MIGHT break if the user turns the knob really slowly.  Make more robust
+    disinteraction_time = 0; 
     interacted = false;
+    visualize_time = -1;
   }
   else{
     disinteraction_time += time - disinteraction_oldtime;
@@ -415,12 +462,14 @@ void updateChem(chem c){
   }
   else{
     int b = 127;
-    if(c.value >= b){
-      c.velocity = -.2;
+    
+    c.velocity = (127 - c.value) / 100.0;
+   /* if(c.value >= b){
+      c.velocity = - c.value;
     }
     else{
-      c.velocity = .2; 
-    }
+      c.velocity += .005; 
+    }*/
   }
   //Serial.println(c->velocity);
 //  c->velocity = (raw_velocity - 127) / 100.0;
@@ -428,12 +477,12 @@ void updateChem(chem c){
   if(c.value > 255)
   {
     c.value = 255;
-    //c->velocity = 0; 
+    c.velocity = 0; 
   }
   if(c.value < 0)
   {
     c.value = 0; 
-    //c->velocity = 0;
+    c.velocity = 0;
   }
 }
 
