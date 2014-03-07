@@ -75,18 +75,21 @@ for row in reader:
         buf[i-2][1] = max(buf[i-2][1], val)
     index +=1
 
-print 'min is ' + str(buf[0][0])
-print 'max is ' + str(buf[0][1])
+#print 'min is ' + str(buf[0][0])
+#print 'max is ' + str(buf[0][1])
 print 'void init_vals(){'
 
 for i in range(0,3):
     index = 0
-    if i == 0: label = '   nitrate_lapse['
-    if i == 1: label = '   temperature_lapse['
-    if i == 2: label = '   ph_lapse['
+    if i == 0: label = '   nitrate_lapse'
+    if i == 1: label = '   temperature_lapse'
+    if i == 2: label = '   ph_lapse'
+    counter = 0
     for val in a[i]:
-        print label + str(index) + '] = ' + str(int(((val - buf[i][0]) / (buf[i][1] - buf[i][0])) * 255)) + ';'
+        print label + '[' + str(index) + '] = ' + str(int(((val - buf[i][0]) / (buf[i][1] - buf[i][0])) * 255)) + ';'
         index += 1
+        counter += 1
+    print label + '_size = ' + str(counter) + ';'
 
 print '}'
 

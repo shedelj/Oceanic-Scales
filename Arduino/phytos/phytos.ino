@@ -15,8 +15,12 @@ unsigned long disinteraction_limit = 15000;  //milliseconds
 int max_balance = 127;
 
 int nitrate_lapse[365];
-int temperature_lapse[279];
+int temperature_lapse[365];
 int ph_lapse[365];
+
+int nitrate_lapse_size = 0;
+int temperature_lapse_size = 0;
+int ph_lapse_size = 0;
 //int tempByte = 127; //default resting value
 
 //I know, it's weird, but don't touch this declaration.
@@ -102,7 +106,7 @@ void loop() {
 void visualize()
 {
    if (visualize_time == -1) visualize_time = millis();
-   int index = (int) (((millis() - visualize_time) / 250) % 365);
+   int index = (int) (((millis() - visualize_time) / 250) % temperature_lapse_size);
    int temperature_target = temperature_lapse[index];
    //int nitrogen_target = nitrogen_lapse[index];
    //int ph_target = ph_lapse[index];
