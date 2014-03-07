@@ -1,18 +1,9 @@
 
 #include <Adafruit_WS2801.h>
 #include "SPI.h"
+#include "variables.h"
 
-#define DATA_PIN (2)
-#define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (64)
-#define DEVICE_ID (1)
-#define PARAMETER_MAX (255)
-
-#define WINDOW_X (26)
-#define WINDOW_Y (800)
-
-Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
 int balance = 0;
 int state = 0;
@@ -21,33 +12,13 @@ unsigned long disinteraction_time = 0;
 unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
-unsigned long pulldown_time = 0;
-unsigned long pulldown_oldtime = 0;
-unsigned long pulldown_limit = 45000;
 int max_balance = 127;
 
+int nitrate_lapse[365];
+int temperature_lapse[279];
+int ph_lapse[365];
 //int tempByte = 127; //default resting value
 
-struct led
-{
-  int x;
-  int y;
-  char type;
-  uint8_t id;
-  boolean alive;
-};
-
-struct chem
-{
-  float value;
-  int prev;
-  int diff;
-  float velocity;
-  float resting_value;
-  uint8_t timelapsevals[365];
-};
-
-void updateChem(int pin, chem* c);
 //I know, it's weird, but don't touch this declaration.
 //https://code.google.com/p/arduino/issues/detail?id=973
 //just ask me if you want to know
@@ -67,23 +38,10 @@ chem ph;
 //4 - Pulldown
 //5 - Display_Paramaters
 
-enum states{
-  GAME,   
-  SLEEP,
-  PULLDOWN,
-};
 
-enum types{
-  PLANKTON,
-  TEMPERATURE,
-  PH,
-  NITROGEN
-};
-
-led leds [LIGHT_COUNT];
 
 void setup() {
-  
+  init_vals();
   Serial.begin(9600);
   state = GAME;
   //initialize LEDS
@@ -95,14 +53,12 @@ void setup() {
   strip.show();
   
   temperature.value = 127;
-  temperature.resting_value = 127;
   temperature.prev = 0;
   temperature.diff = 0;
   temperature.velocity = 0;
   
   ph.value = 127;
   nitrogen.value = 127;
-  
 }
 
 
@@ -115,12 +71,12 @@ void loop() {
     //Serial.println(state);
   
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
-  if(Serial.available() > 0)
-  {
-     temperature.resting_value = Serial.read(); 
-  }
   balance = abs(temperature.value - 127);
   updateChem(49, &temperature);
+  if (disinteraction_time > START_VISUALIZE_TIME)
+  {
+     visualize() ;
+  }
   
   switch(state)
   { 
@@ -143,40 +99,26 @@ void loop() {
   strip.show();
 }
 
-void serialEvent()
+void visualize()
 {
-  timelapsei = 0;
-  while(timelapsei < 365)
-  {
-    while(Serial.available())
-    { 
-       temperature.timelapsevalues[timelapsei++] = Serial.read();
-    }
-  }
+   if (visualize_time == -1) visualize_time = millis();
+   int index = (int) (((millis() - visualize_time) / 250) % 365);
+   int temperature_target = temperature_lapse[index];
+   //int nitrogen_target = nitrogen_lapse[index];
+   //int ph_target = ph_lapse[index];
+   
+   temperature.value +=   (temperature_target - temperature.value) / 5;
+   
+   
+   //c.velocity = (127 - c.value) / 100.0;
 }
 
-int timelapsei = 0;
-
-unsigned long timelapsetime = 0;
-void lapse()
-{
-  unsigned long oldtime = timelapsetime;
-  timelapsetime = millis();
-  if (timelapsetime % 5000 > oldtime % 5000) 
-  {
-    temperature.resting_value = timelapsevalues[i];
-  } 
-}
 
 boolean timelapse = false;
 float control = 0; 
 float twinklecontrol = 0;
 void game()
 {
-  if(timelapse)
-  {
-    lapse(); 
-  }
   int rand = random(100);
   double e = 2.71828;
   double living_ratio = double(LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
@@ -192,24 +134,25 @@ void game()
   
   /////////
   {
-    
-    if(leds[i].alive){ 
-        if(shall_change(i, rand, living_modifier, balance)){
+    if(disinteraction_time <= START_VISUALIZE_TIME){
+      if(leds[i].alive){ 
+          if(shall_change(i, rand, living_modifier, balance)){
+           
+           leds[i].alive = false;
+           living_count--;
+           strip.setPixelColor(i, 0, 0, 0); 
+          }
+      
+      }
+      else{
+         //living_modifier = 1 + 4 * (pow(5, (1 - living_ratio - 2.5)));
+         if(shall_change(i, rand, dead_modifier, max_balance - balance)){
+           leds[i].alive = true;
+            living_count++;
+  
+         }
          
-         leds[i].alive = false;
-         living_count--;
-         strip.setPixelColor(i, 0, 0, 0); 
-        }
-    
-    }
-    else{
-       //living_modifier = 1 + 4 * (pow(5, (1 - living_ratio - 2.5)));
-       if(shall_change(i, rand, dead_modifier, max_balance - balance)){
-         leds[i].alive = true;
-          living_count++;
-
-       }
-       
+      }
     }
     char type = leds[i].type;
     uint8_t brightness = 0;
@@ -351,17 +294,17 @@ uint8_t get_brightness_chem(int id)
    
    int raw_brightness = 0;
    
-   if(distance < -50)
+   if(distance < -100)
    {
       raw_brightness =  255; 
    }
-   else if (distance > 50)
+   else if (distance > 100)
    {
       raw_brightness = 0; 
    }
    else
    {
-      raw_brightness =  (255 / 100.0) * (100 -  (distance + 50)); 
+      raw_brightness =  (255 / 200.0) * (200 -  (distance + 100)); 
    }
    
    
@@ -392,7 +335,6 @@ uint8_t pulse_value(int id)
   float level = cos(t - d) + 1;
   return level * 127;
 }
-
 
 uint8_t twinkle_value(int id)
 {
@@ -540,7 +482,6 @@ void updateChem(int pin, chem* c){
   }
   else{
     int b = 127;
-    if (disinteraction_time > pulldown_limit) b = c->resting_value;
     if(c->value >= b){
       c->velocity = -.2;
     }
