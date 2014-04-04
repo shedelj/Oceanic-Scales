@@ -2,10 +2,14 @@
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (64)
+#define LIGHT_COUNT (128)
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
 #define START_VISUALIZE_TIME (40000)
+
+#define PULSE_PIN 30
+#define REDWHITE_PIN 31
+#define SYNC_PIN (32);
 
 
 #define WINDOW_X (26)
@@ -13,6 +17,11 @@
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
+/* 
+Arduino Mega SPI:
+52 - CLK
+51 - MOSI
+*/
 
 struct led
 {

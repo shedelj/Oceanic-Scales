@@ -61,8 +61,9 @@ for row in reader:
         continue
     for i in range(2,5):
         val = float(strip_tags(row[i]))
-        diff = buf[i-2][1] - buf[i-2][0]
-        if val > buf[i-2][1] + diff or val < buf[i-2][0] - diff: 
+        #diff = buf[i-2][1] - buf[i-2][0]
+        #if val > buf[i-2][1] + diff or val < buf[i-2][0] - diff: 
+        if val > 50000:
             #print 'yup'
             val = buf[i-2][2]
         #print val
@@ -77,18 +78,19 @@ for row in reader:
 
 #print 'min is ' + str(buf[0][0])
 #print 'max is ' + str(buf[0][1])
-print 'void init_vals(){'
+#print 'void init_vals(){'
+print buf
 
 for i in range(0,3):
     index = 0
-    if i == 0: label = '   nitrate_lapse['
-    if i == 1: label = '   temperature_lapse['
-    if i == 2: label = '   ph_lapse['
+    if i == 0: print 'int nitrate_lapse[' + str(len(a[0])) + '] = {'
+    if i == 1: print 'int temperature_lapse[' + str(len(a[1])) + '= {'
+    if i == 2: print 'int ph_lapse[' + str(len(a[2])) + '] = {'
+    s = ''
     for val in a[i]:
-        print label + str(index) + '] = ' + str(int(((val - buf[i][0]) / (buf[i][1] - buf[i][0])) * 255)) + ';'
+        s += str(int(((val - buf[i][0]) / (buf[i][1] - buf[i][0])) * 255)) + ','
         index += 1
-
-print '}'
+    print s + '};'
 
 #
 #datafile = open('data.txt', 'w')

@@ -3,8 +3,6 @@
 #include "SPI.h"
 #include "variables.h"
 
-
-
 int balance = 0;
 int state = 0;
 int living_count = LIGHT_COUNT;
@@ -21,7 +19,6 @@ int ph_lapse[365];
 int nitrate_lapse_size = 0;
 int temperature_lapse_size = 0;
 int ph_lapse_size = 0;
-//int tempByte = 127; //default resting value
 
 //I know, it's weird, but don't touch this declaration.
 //https://code.google.com/p/arduino/issues/detail?id=973
@@ -50,11 +47,16 @@ void setup() {
   state = GAME;
   //initialize LEDS
   init_leds();
-
   Serial.println("Ready"); 
-
+  pinMode(30, OUTPUT);
+  pinMode(31, OUTPUT);
+  pinMode(32, OUTPUT);
+  pinMode(53, OUTPUT);
   strip.begin();
   strip.show();
+  
+  //SPI.setBitOrder(LSBFIRST);
+  //SPI.setDataMode(SPI_MODE0);
   
   temperature.value = 127;
   temperature.prev = 0;
@@ -63,6 +65,8 @@ void setup() {
   
   ph.value = 127;
   nitrogen.value = 127;
+  
+  //SPI.begin();
 }
 
 
@@ -71,15 +75,27 @@ void setup() {
 //---------------------------------
 
 void loop() {
+
   //  Serial.print("state = ");
     //Serial.println(state);
   
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
   balance = abs(temperature.value - 127);
+  
+  if (balance < 64){
+      digitalWrite(31, HIGH);
+      digitalWrite(32, HIGH);
+  }
+  else {
+      digitalWrite(31, LOW);
+      digitalWrite(32, LOW); 
+  }
+  
   updateChem(49, &temperature);
+  updateChem(48, &nitrate);
   if (disinteraction_time > START_VISUALIZE_TIME)
   {
-     visualize() ;
+     //visualize() ;
   }
   
   switch(state)
@@ -123,6 +139,7 @@ float control = 0;
 float twinklecontrol = 0;
 void game()
 {
+
   int rand = random(100);
   double e = 2.71828;
   double living_ratio = double(LIGHT_COUNT - living_count) / double(LIGHT_COUNT);
@@ -193,10 +210,15 @@ void game()
     
   }
 
-   control = control + .0095;
+   control = control + .0145;
    if (control >= 1) 
    {
      control -= 1;
+    digitalWrite(30, HIGH);
+    
+   }
+   else if(control >= .15){
+    digitalWrite(30, LOW); 
    }
    twinklecontrol = twinklecontrol + ((temperature.value * 3) / 10000.0);
    if (twinklecontrol >= 1)
@@ -498,6 +520,7 @@ void updateChem(int pin, chem* c){
   c->value += c->velocity;
   if(c->value > 255)
   {
+
     c->value = 255;
     //c->velocity = 0; 
   }
@@ -522,7 +545,7 @@ void init_leds()
   {
     leds[i].id = i;
     leds[i].alive = true;
-    switch(i){
+    switch(i % 64){
     case 0: 
       //leds[i].x = 215;
       leds[i].y = 24;
