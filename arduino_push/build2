@@ -1,0 +1,4 @@
+ino clean
+python query.py > src/phytos.ino
+cat phytos.ino.master >> src/phytos.ino
+ino build
