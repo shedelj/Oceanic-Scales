@@ -76,34 +76,17 @@ unsigned long disinteraction_time = 0;
 unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
-int max_balance = 127;
+int max_balance = 256;
 
-//int nitrate_lapse[365];
-//int temperature_lapse[365];
-//int ph_lapse[365];
 
 int nitrate_lapse_size = 0;
 int temperature_lapse_size = 0;
 int ph_lapse_size = 0;
 
-//I know, it's weird, but don't touch this declaration.
-//https://code.google.com/p/arduino/issues/detail?id=973
-//just ask me if you want to know
-
 
 chem temperature;
 chem nitrogen;
 chem ph;
-
-
-
-//state values
-//0 - Rest
-//1 - Game
-//2 - Sleep
-//3 - Calibrate
-//4 - Pulldown
-//5 - Display_Paramaters
 
 
 
@@ -129,6 +112,12 @@ void setup() {
   temperature.velocity = 0;
   
   ph.value = 127;
+  ph.prev = 0;
+  ph.diff = 0;
+  ph.velocity = 0;
+
+
+
   nitrogen.value = 127;
   
   //SPI.begin();
@@ -147,7 +136,7 @@ void loop() {
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
   balance = abs(temperature.value - 127);
   
-  if (balance < 64){
+  if (balance < max_balance / 2){
       digitalWrite(31, HIGH);
       digitalWrite(32, HIGH);
   }
@@ -156,7 +145,8 @@ void loop() {
       digitalWrite(32, LOW); 
   }
   
-  updateChem();
+  updateChem(0);
+  updateChem(1);
   //updateChem(48, &nitrate);
   if (disinteraction_time > START_VISUALIZE_TIME)
   {
@@ -256,6 +246,9 @@ void game()
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
        strip.setPixelColor(i, brightness, 10, 255 - brightness);
+     case PH:
+       brightness = get_brightness_chem(i);
+       strip.setPixelColor(i, 10, brightness, 255- brightness);
        //uint8_t r = brightness;
        //uint8_t b = 255 - brightness
        //pv = pulse_value(i);
@@ -526,9 +519,20 @@ void calibrate(){
 }
 
  
-void updateChem(){
-  int pin = 49;
-  chem* c = &temperature;
+void updateChem(int select){
+  int pin;
+  chem* c;
+  if (select == 0)
+  {
+    pin = 49;
+    c = &temperature;
+  }
+  if (select == 1){
+    pin = 48;
+    c = &ph;
+  }
+
+
   int sensorValue = pulseIn(pin, HIGH);
   //int sensorValue2 = pulseIn(51, HIGH);
   //int sensorValue3 = pulseIn(53, HIGH);
@@ -940,12 +944,15 @@ void init_leds()
       break;
     }    
 
-  if(i >= 32) {
-    leds[i].y += 300;
-  }
-  if(i >= 48){
-    leds[i].y += 150; 
-  }
+    if(i >= 32) {
+      leds[i].y += 300;
+    }
+    if(i >= 48){
+      leds[i].y += 150; 
+    }
+    if(i >= 64 && leds[i].type == TEMPERATURE){
+      leds[i].type = PH;
+    }
 //NEXT TIME: OFFSET BLRUGH
   }
 

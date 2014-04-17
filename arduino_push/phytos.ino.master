@@ -6,7 +6,7 @@
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (128)
+#define LIGHT_COUNT (129)
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
 #define START_VISUALIZE_TIME (40000)
@@ -70,19 +70,12 @@ unsigned long disinteraction_time = 0;
 unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
-int max_balance = 127;
+int max_balance = 256;
 
-//int nitrate_lapse[365];
-//int temperature_lapse[365];
-//int ph_lapse[365];
 
 int nitrate_lapse_size = 0;
 int temperature_lapse_size = 0;
 int ph_lapse_size = 0;
-
-//I know, it's weird, but don't touch this declaration.
-//https://code.google.com/p/arduino/issues/detail?id=973
-//just ask me if you want to know
 
 
 chem temperature;
@@ -91,19 +84,10 @@ chem ph;
 
 
 
-//state values
-//0 - Rest
-//1 - Game
-//2 - Sleep
-//3 - Calibrate
-//4 - Pulldown
-//5 - Display_Paramaters
-
-
-
 void setup() {
   Serial.begin(9600);
   state = GAME;
+  //state = 54;
   //initialize LEDS
   init_leds();
   Serial.println("Ready"); 
@@ -123,6 +107,12 @@ void setup() {
   temperature.velocity = 0;
   
   ph.value = 127;
+  ph.prev = 0;
+  ph.diff = 0;
+  ph.velocity = 0;
+
+
+
   nitrogen.value = 127;
   
   //SPI.begin();
@@ -139,9 +129,10 @@ void loop() {
     //Serial.println(state);
   
 //  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
-  balance = abs(temperature.value - 127);
+  //balance = abs(temperature.value - 127);
+  balance = abs(temperature.value - 127)  + abs(ph.value -127);
   
-  if (balance < 64){
+  if (balance < max_balance / 2){
       digitalWrite(31, HIGH);
       digitalWrite(32, HIGH);
   }
@@ -150,7 +141,8 @@ void loop() {
       digitalWrite(32, LOW); 
   }
   
-  updateChem();
+  updateChem(0);
+  updateChem(1);
   //updateChem(48, &nitrate);
   if (disinteraction_time > START_VISUALIZE_TIME)
   {
@@ -206,7 +198,7 @@ void game()
   double dead_modifier =  1 +  pow(e, (1 - living_ratio) * 2) / 5.0; 
   //Serial.println(temperature.value);
   //balance - this basically determines what state we go into
-  float shift = (float) balance / 127;
+  float shift = (float) balance / max_balance / 2;
 
   ///////// These values must be calculated here otherwise updating takes too long.
   //update_life();
@@ -215,6 +207,7 @@ void game()
   /////////
   {
     if(disinteraction_time <= START_VISUALIZE_TIME){
+      
       if(leds[i].alive){ 
           if(shall_change(i, rand, living_modifier, balance)){
            
@@ -233,6 +226,7 @@ void game()
          }
          
       }
+      
     }
     char type = leds[i].type;
     uint8_t brightness = 0;
@@ -245,11 +239,20 @@ void game()
     {
      case PLANKTON:    
        brightness = get_brightness_plankton(i);
+       //if (i < 64) brightness = brightness / abs(temperature.value - 127) / 2.0 ;
        strip.setPixelColor(i, brightness, brightness, brightness);
+       //if (i == 0) Serial.println(brightness); 
        break;
      case TEMPERATURE: 
        brightness = get_brightness_chem(i);
        strip.setPixelColor(i, brightness, 10, 255 - brightness);
+       break;
+     case 2:
+       brightness = get_brightness_chem(i);    
+       //Serial.println(brightness);
+
+       strip.setPixelColor(i, 10, brightness, 255- brightness);
+       break;
        //uint8_t r = brightness;
        //uint8_t b = 255 - brightness
        //pv = pulse_value(i);
@@ -284,6 +287,7 @@ void game()
    {
      twinklecontrol -=1;
    }
+   //Serial.println(twinklecontrol);
    
 }
 
@@ -293,7 +297,9 @@ boolean shall_change(int i, int rando, double living_modifier, int b)
    //if(((i + (rand * millis())) % LIGHT_COUNT) == 0){
      //Serial.println( 1 + (pow(5, (living_ratio - 0.5) * 4 ) / 25.0));
      //double random_calculated = ((i + (rand * millis())) % LIGHT_COUNT) / (double(LIGHT_COUNT));
-     if(b * rand > 12600){
+     //if(b * rand > 12600){
+     if(b * rand > 25200){  //MUST CHANGETHIS MANUALLY FOR THIRD WALL
+
        //if( random_calculated * balance * rand * ( 1 ) > 11500){
        //Serial.println("Die.");
        return true;
@@ -317,7 +323,7 @@ void update_life(){
   //Serial.println(living_modifier);
   double dead_modifier = pow(2.71828, 5 * ((1 - living_ratio) + .5)) / 100.0;
   int living_index = (int) (living_modifier * (balance / 10.0));
-  int dead_index = dead_modifier * ((127 - balance) / 10.0);
+  int dead_index = dead_modifier * ((max_balance - balance) / 10.0);
   //Serial.println(living_index);
   for(int i = 0; i < living_index; ++i){
      int chosen = millis() % 500;
@@ -355,7 +361,7 @@ void tint_plankton(id)
 uint8_t get_brightness_plankton(int id)
 {
   //float shift = (float) balance / (127 * 3);
-  float shift = (float) balance / (127 );
+  float shift = (float) balance / (max_balance );
   float weighted_average = ((float) twinkle_value(id) * shift) + ((float) pulse_value(id) * (1- shift));
 
   return (uint8_t) weighted_average;
@@ -520,9 +526,20 @@ void calibrate(){
 }
 
  
-void updateChem(){
-  int pin = 49;
-  chem* c = &temperature;
+void updateChem(int select){
+  int pin;
+  chem* c;
+  if (select == 0)
+  {
+    pin = 49;
+    c = &temperature;
+  }
+  if (select == 1){
+    pin = 48;
+    c = &ph;
+  }
+
+
   int sensorValue = pulseIn(pin, HIGH);
   //int sensorValue2 = pulseIn(51, HIGH);
   //int sensorValue3 = pulseIn(53, HIGH);
@@ -535,12 +552,12 @@ void updateChem(){
  // Serial.println(sensorValue);
 
   c->diff = c->diff + (sensorValue - c->prev) ;
-
+  //if (select == 0) Serial.println(c->diff);
   if (abs(c->diff) > 600) {
       c->diff = 0;
   }
 
-  float weighted = c->diff / 6;
+  float weighted = c->diff / 25.0;
   
   unsigned long time = millis();
 
@@ -548,26 +565,27 @@ void updateChem(){
     disinteraction_time = 0; // This MIGHT break if the user turns the knob really slowly.  Make more robust
   }
   else{
-    disinteraction_time += time - disinteraction_oldtime;
+    if(select == 0) disinteraction_time += time - disinteraction_oldtime;
   }
   disinteraction_oldtime = time;
 
   //Serial.println(weighted);
-  
+  //Serial.println(disinteraction_time);
   float max_velocity = 2.0;
   if (disinteraction_time < disinteraction_limit){
-    
-    if ((c->velocity - (weighted / 100.0)) < -max_velocity) {
+    if ((c->velocity - (weighted / 50.0)) < -max_velocity) {
         c->velocity = -max_velocity;
     }
-    else if ((c->velocity - (weighted / 100.0)) > max_velocity) {
+    else if ((c->velocity - (weighted / 50.0)) > max_velocity) {
         c->velocity = max_velocity;
     }
     else{
-      c->velocity -= (weighted /100.0) ;
+      c->velocity -= (weighted /50.0) ;
     }
   }
   else{
+    //Serial.println("Hello");
+
     int b = 127;
     if(c->value >= b){
       c->velocity = -.2;
@@ -606,12 +624,11 @@ void init_leds()
   {
     leds[i].id = i;
     leds[i].alive = true;
-    switch(i % 64){
+    switch(i){
     case 0: 
       //leds[i].x = 215;
       leds[i].y = 24;
       leds[i].type = PLANKTON;
-     ;
       break;
     case 1: 
       //leds[i].x = 241;
@@ -930,21 +947,277 @@ void init_leds()
       leds[i].y = 170;
       leds[i].type = TEMPERATURE;
       break;
+    case 64:
+      leds[i].y = 23;
+      leds[i].type = PLANKTON; 
+            break;
+
+    case 65:
+      leds[i].y = 23;
+      leds[i].type = PH;
+      break;
+    case 66:
+      leds[i].y = 43;
+      leds[i].type = PLANKTON; 
+      break;
+    case 67:
+      leds[i].y = 23;
+      leds[i].type = PH;
+      break;
+    case 68:
+      leds[i].y = 23;
+      leds[i].type = PH;   
+      break;
+    case 69:
+      leds[i].y = 40;
+      leds[i].type = PH;
+      break;
+    case 70:
+      leds[i].y = 28;
+      leds[i].type = PH;  
+      break;
+    case 71:
+      leds[i].y = 29;
+      leds[i].type = PLANKTON;
+      break;
+    case 72:
+      leds[i].y = 35;
+      leds[i].type = PLANKTON;
+      break;
+    case 73:
+      leds[i].y = 50;
+      leds[i].type = PH;
+      break;
+    case 74:
+      leds[i].y = 56;
+      leds[i].type = PLANKTON;
+      break;
+    case 75:
+      leds[i].y = 49;
+      leds[i].type = PH;
+      break;
+    case 76:
+      leds[i].y = 52;
+      leds[i].type = PLANKTON;
+      break;
+    case 77:
+      leds[i].y = 51;
+      leds[i].type = PH;
+      break;
+    case 78:
+      leds[i].y = 56;
+      leds[i].type = PH;
+      break;
+    case 79:
+      leds[i].y = 50;
+      leds[i].type = PLANKTON;
+      break;
+    case 80:
+      leds[i].y = 53;
+      leds[i].type = PH;
+      break;
+    case 81:
+      leds[i].y = 75;
+      leds[i].type = PLANKTON;
+      break;
+    case 82:
+      leds[i].y = 66;
+      leds[i].type = PH;
+      break;
+    case 83:
+      leds[i].y = 66;
+      leds[i].type = PLANKTON;
+      break;
+    case 84:
+      leds[i].y = 66;
+      leds[i].type = PH;
+      break;
+    case 85:
+      leds[i].y = 77;
+      leds[i].type = PH;   
+     break; 
+    case 86:
+      leds[i].y = 89;
+      leds[i].type = PH;
+      break;
+    case 87:
+      leds[i].y = 100;
+      leds[i].type = PLANKTON;
+      break;
+    case 88:
+      leds[i].y = 113;
+      leds[i].type = PH;
+      break;
+    case 89:
+      leds[i].y = 103;
+      leds[i].type = PH;
+      break;
+    case 90:
+      leds[i].y = 91;
+      leds[i].type = PLANKTON;  
+     break; 
+    case 91:
+      leds[i].y = 105;
+      leds[i].type = PH;
+      break;
+    case 92:
+      leds[i].y = 99;
+      leds[i].type = PH;
+      break;
+    case 93:
+      leds[i].y = 105;
+      leds[i].type = PLANKTON;  
+      break;
+    case 94:
+      leds[i].y = 105;
+      leds[i].type = PH;
+      break;
+    case 95:
+      leds[i].y = 100;
+      leds[i].type = PLANKTON;
+      break;
+    case 96:
+      leds[i].y = 131;
+      leds[i].type = PH;
+      break;
+    case 97:
+      leds[i].y = 135;
+      leds[i].type = PH;
+      break;
+    case 98:
+      leds[i].y = 149;
+      leds[i].type = PLANKTON;
+      break;
+    case 99:
+      leds[i].y = 133;
+      leds[i].type = PH;      
+      break;
+    case 100:
+      leds[i].y = 130;
+      leds[i].type = PLANKTON;
+      break;
+    case 101:
+      leds[i].y =   131;
+      leds[i].type = PLANKTON;
+      break;
+    case 102:
+      leds[i].y = 132;
+      leds[i].type = PLANKTON; 
+      break;
+    case 103:
+      leds[i].y = 146;
+      leds[i].type = PH;
+      break;
+    case 104:
+      leds[i].y = 148;
+      leds[i].type = PLANKTON;  
+      break;
+    case 105:
+      leds[i].y = 161;
+      leds[i].type = PH;
+      break;
+    case 106:
+      leds[i].y = 171;
+      leds[i].type = PLANKTON;
+      break;
+    case 107:
+      leds[i].y = 170;
+      leds[i].type = PH;   
+      break;
+    case 108:
+      leds[i].y = 162;
+      leds[i].type = PLANKTON; 
+      break;
+    case 109:
+      leds[i].y = 150;
+      leds[i].type = PH;
+      break;
+    case 110:
+      leds[i].y = 172;
+      leds[i].type = PH;
+      break;
+    case 111:
+      leds[i].y = 161;
+      leds[i].type = PLANKTON;
+      break;
+    case 112:
+      leds[i].y = 212;
+      leds[i].type = PLANKTON;   
+     break; 
+    case 113:
+      leds[i].y = 231;
+      leds[i].type = PH;
+      break;
+    case 114:
+      leds[i].y = 240;
+      leds[i].type = PLANKTON;
+      break;
+    case 115:
+      leds[i].y = 228;
+      leds[i].type = PLANKTON;
+      break;
+    case 116:
+      leds[i].y = 227;
+      leds[i].type = PH;
+      break;
+    case 117:
+      leds[i].y = 237;
+      leds[i].type = PLANKTON;   
+    break;  
+    case 118:
+      leds[i].y = 235;
+      leds[i].type = PH;
+      break;
+    case 119:
+      leds[i].y = 211;
+      leds[i].type = PLANKTON;  
+      break;
+    case 120:
+      leds[i].y = 191;
+      leds[i].type = PH;
+      break;
+    case 121:
+      leds[i].y = 198;
+      leds[i].type = PH;
+      break;
+    case 122:
+      leds[i].y = 191;
+      leds[i].type = PLANKTON;
+      break;
+    case 123:
+      leds[i].y = 196;
+      leds[i].type = PH;
+      break;
+    case 124:
+      leds[i].y = 192;
+      leds[i].type = PH;
+      break;
+    case 125:
+      leds[i].y = 208;
+      leds[i].type = PH;
+      break;
+    case 126:
+      leds[i].y = 190;
+      leds[i].type = PLANKTON;   
+  break;    
     default: 
       break;
     }    
-
-  if(i >= 32) {
-    leds[i].y += 300;
-  }
-  if(i >= 48){
-    leds[i].y += 150; 
-  }
+    if (i < 64){
+      if(i >= 32) {
+        leds[i].y += 300;
+      }
+      if(i >= 48){
+        leds[i].y += 150; 
+      }
+    }
+    else{
+       leds[i].y = int(leds[i].y * 3); 
+    }
 //NEXT TIME: OFFSET BLRUGH
   }
 
 }
-
 
 
 
