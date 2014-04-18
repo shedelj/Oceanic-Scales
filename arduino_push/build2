@@ -1,4 +1,15 @@
-ino clean
-python query.py > src/phytos.ino
-cat phytos.ino.master >> src/phytos.ino
-ino build
+
+while true; do
+	ino clean
+	python query.py > src/phytos.ino
+	cat phytos.ino.master >> src/phytos.ino
+	ino build
+
+	#current_epoch=$(date +%s)
+	#target_epoch=$(date -d '16:30' +%s)
+
+	#sleep_seconds=$(( $target_epoch - $current_epoch ))
+
+	#sleep_seconds=$(86400)
+	sleep 86400
+done
