@@ -4,6 +4,7 @@ while true; do
 	python query.py > src/phytos.ino
 	cat phytos.ino.master >> src/phytos.ino
 	ino build
+	ino upload
 
 	#current_epoch=$(date +%s)
 	#target_epoch=$(date -d '16:30' +%s)

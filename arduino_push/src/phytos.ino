@@ -152,7 +152,7 @@ void loop() {
   //updateChem(48, &nitrate);
   if (disinteraction_time > START_VISUALIZE_TIME)
   {
-     //visualize() ;
+     visualize() ;
   }
   
   switch(state)
