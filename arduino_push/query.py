@@ -80,7 +80,7 @@ for row in reader:
 #print 'max is ' + str(buf[0][1])
 #print 'void init_vals(){'
 #print buf
-
+print 'int lapse_size = ' + str(len(a[0])) + ';'
 for i in range(0,3):
     index = 0
     if i == 0: print 'int nitrate_lapse[' + str(len(a[0])) + '] = {'

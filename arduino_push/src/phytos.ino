@@ -1,3 +1,4 @@
+int lapse_size = 279;
 int nitrate_lapse[279] = {
 33,31,31,32,33,49,50,60,46,43,40,34,37,40,41,43,38,39,39,38,34,31,31,30,28,29,30,28,31,31,15,15,15,26,27,28,29,25,22,27,29,29,29,29,28,28,26,26,28,40,59,51,41,41,37,35,15,15,15,15,15,15,15,15,15,15,15,15,15,59,62,15,220,15,15,15,255,204,187,15,224,213,180,207,15,15,15,15,15,15,15,15,15,15,17,16,13,13,13,15,14,15,15,95,86,76,71,72,75,68,49,53,42,39,51,50,51,49,118,105,128,104,136,121,160,157,140,151,157,139,137,103,111,15,115,88,97,120,121,126,91,59,52,48,53,58,53,47,50,44,43,65,60,95,15,138,15,167,157,143,146,117,98,75,64,61,64,65,61,59,57,46,45,43,33,36,39,34,31,32,34,33,26,35,27,25,25,22,18,18,18,24,21,20,19,17,39,31,19,20,16,14,17,15,15,18,18,17,16,17,19,19,25,31,24,20,20,18,18,20,20,18,16,16,14,14,17,18,21,24,26,24,29,23,17,13,12,12,15,0,15,15,15,15,15,15,15,13,22,22,18,16,16,19,24,27,28,33,30,29,29,27,26,27,24,18,23,21,24,24,21,18,20,25,28,23,20,20,19,};
 int temperature_lapse[279]= {
@@ -49,7 +50,6 @@ struct chem
   int prev;
   int diff;
   float velocity;
-  uint8_t timelapsevals[365];
 };
 
 
@@ -77,12 +77,6 @@ unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
 int max_balance = 256;
-
-
-int nitrate_lapse_size = 0;
-int temperature_lapse_size = 0;
-int ph_lapse_size = 0;
-
 
 chem temperature;
 chem nitrogen;
@@ -179,15 +173,15 @@ void loop() {
 void visualize()
 {
    if (visualize_time == -1) visualize_time = millis();
-   int index = (int) (((millis() - visualize_time) / 250) % temperature_lapse_size);
+   int index = (int) (((millis() - visualize_time) / 250) % lapse_size);
+
    int temperature_target = temperature_lapse[index];
    //int nitrogen_target = nitrogen_lapse[index];
-   //int ph_target = ph_lapse[index];
+   int ph_target = ph_lapse[index];
    
    temperature.value +=   (temperature_target - temperature.value) / 5;
+   ph.value += (ph_target - ph.value) / 5;
    
-   
-   //c.velocity = (127 - c.value) / 100.0;
 }
 
 

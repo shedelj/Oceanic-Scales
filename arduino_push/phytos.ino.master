@@ -43,7 +43,6 @@ struct chem
   int prev;
   int diff;
   float velocity;
-  uint8_t timelapsevals[365];
 };
 
 
@@ -71,12 +70,6 @@ unsigned long disinteraction_oldtime = 0;
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
 int max_balance = 256;
-
-
-int nitrate_lapse_size = 0;
-int temperature_lapse_size = 0;
-int ph_lapse_size = 0;
-
 
 chem temperature;
 chem nitrogen;
@@ -173,15 +166,15 @@ void loop() {
 void visualize()
 {
    if (visualize_time == -1) visualize_time = millis();
-   int index = (int) (((millis() - visualize_time) / 250) % temperature_lapse_size);
+   int index = (int) (((millis() - visualize_time) / 250) % lapse_size);
+
    int temperature_target = temperature_lapse[index];
    //int nitrogen_target = nitrogen_lapse[index];
-   //int ph_target = ph_lapse[index];
+   int ph_target = ph_lapse[index];
    
    temperature.value +=   (temperature_target - temperature.value) / 5;
+   ph.value += (ph_target - ph.value) / 5;
    
-   
-   //c.velocity = (127 - c.value) / 100.0;
 }
 
 
