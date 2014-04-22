@@ -187,7 +187,9 @@ void visualize()
 
 boolean timelapse = false;
 float control = 0; 
-float twinklecontrol = 0;
+float twinklecontroltemp = 0;
+float twinklecontrolph = 0;
+float twinklecontrolnitrate = 0;
 void game()
 {
 
@@ -239,7 +241,7 @@ void game()
     {
      case PLANKTON:    
        brightness = get_brightness_plankton(i);
-       //if (i < 64) brightness = brightness / abs(temperature.value - 127) / 2.0 ;
+       //if (i < 64) brightness = brightness / (1 + abs(temperature.value - 127));
        strip.setPixelColor(i, brightness, brightness, brightness);
        //if (i == 0) Serial.println(brightness); 
        break;
@@ -272,7 +274,7 @@ void game()
     
   }
 
-   control = control + .0145;
+   control = control + .0245;
    if (control >= 1) 
    {
      control -= 1;
@@ -282,11 +284,21 @@ void game()
    else if(control >= .15){
     digitalWrite(30, LOW); 
    }
-   twinklecontrol = twinklecontrol + ((temperature.value * 3) / 10000.0);
-   if (twinklecontrol >= 1)
+   twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0);
+   if (abs(temperature.value - 127) > 110) twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0) * 2 ;
+
+   if (twinklecontroltemp >= 1)
    {
-     twinklecontrol -=1;
+     twinklecontroltemp -=1;
    }
+   twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0);
+   if (abs(ph.value - 127) > 110) twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0) * 2;
+
+   if (twinklecontrolph >= 1)
+   {
+     twinklecontrolph -=1;
+   }
+
    //Serial.println(twinklecontrol);
    
 }
@@ -429,6 +441,10 @@ uint8_t pulse_value(int id)
 
 uint8_t twinkle_value(int id)
 {
+   double twinklecontrol = 0;
+   if (id < 64) twinklecontrol = twinklecontroltemp;
+   else twinklecontrol = twinklecontrolph;
+   //Serial.println(twinklecontrol);
    switch(id % 5)
    {
      case 0: 
@@ -1218,6 +1234,7 @@ void init_leds()
   }
 
 }
+
 
 
 
