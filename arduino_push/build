@@ -1,0 +1,16 @@
+
+while true; do
+	ino clean
+	python query.py > src/phytos.ino
+	cat phytos.ino.master >> src/phytos.ino
+	ino build -m mega2560
+	ino upload -m mega2560
+
+	#current_epoch=$(date +%s)
+	#target_epoch=$(date -d '16:30' +%s)
+
+	#sleep_seconds=$(( $target_epoch - $current_epoch ))
+
+	#sleep_seconds=$(86400)
+	sleep 86400
+done
