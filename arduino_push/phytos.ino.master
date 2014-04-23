@@ -239,14 +239,17 @@ void game()
        //if (i == 0) Serial.println(brightness); 
        break;
      case TEMPERATURE: 
-       brightness = get_brightness_chem(i);
+       brightness = get_brightness_chem(i);       
+       //strip.setPixelColor(i, 10, brightness, 255- brightness);
+
        strip.setPixelColor(i, brightness, 10, 255 - brightness);
        break;
-     case 2:
+     case PH:
        brightness = get_brightness_chem(i);    
-       //Serial.println(brightness);
-
+       if (i == 91) Serial.println(brightness);
        strip.setPixelColor(i, 10, brightness, 255- brightness);
+
+
        break;
        //uint8_t r = brightness;
        //uint8_t b = 255 - brightness
@@ -277,14 +280,16 @@ void game()
    else if(control >= .15){
     digitalWrite(30, LOW); 
    }
-   twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0);
+   //twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0);
+   twinklecontroltemp = twinklecontroltemp + .0845;
    if (abs(temperature.value - 127) > 110) twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0) * 2 ;
 
    if (twinklecontroltemp >= 1)
    {
      twinklecontroltemp -=1;
    }
-   twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0);
+   //twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0);
+   twinklecontrolph += .0845;
    if (abs(ph.value - 127) > 110) twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0) * 2;
 
    if (twinklecontrolph >= 1)
@@ -582,10 +587,10 @@ void updateChem(int select){
   //Serial.println(disinteraction_time);
   float max_velocity = 2.0;
   if (disinteraction_time < disinteraction_limit){
-    if ((c->velocity - (weighted / 50.0)) < -max_velocity) {
+    if ((c->velocity - (weighted / 25.0)) < -max_velocity) {
         c->velocity = -max_velocity;
     }
-    else if ((c->velocity - (weighted / 50.0)) > max_velocity) {
+    else if ((c->velocity - (weighted / 25.0)) > max_velocity) {
         c->velocity = max_velocity;
     }
     else{
@@ -1223,11 +1228,9 @@ void init_leds()
     else{
        leds[i].y = int(leds[i].y * 3); 
     }
-//NEXT TIME: OFFSET BLRUGH
   }
 
 }
-
 
 
 
