@@ -1,7 +1,8 @@
 
 while true; do
 	ino clean
-	python query.py > src/phytos.ino
+	python query.py > query_results.txt
+	cat query_results.txt > src/phytos.ino
 	cat phytos.ino.master >> src/phytos.ino
 	ino build -m mega2560
 	ino upload -m mega2560
