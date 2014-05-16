@@ -15,15 +15,19 @@ Every time the Rasberry Pi boots, this is what happens:
 
 All of this behavior is defined in the shell script build, located in this directory, and should run on startup.  
 
+The script build_wo_query constructs, builds, and uploads phytos.ino without actually activating query.py.  This is mostly for debugging purposes since the queries take a while, but it can be used in production in a pinch since the data for query.py only changes daily, though, at that point, the arduino should have the same code as the version you're feeding it so it's kind of moot.  
+
+the command ino (from inotool) must be run in this directory and it's going to look for the src and lib directories, so I wouldn't change the directory structure too much unless you know what you're doing.  
+
+=========
 If things are breaking and you're not sure how to interpret the error messages, here are the most common problems:
 
-query.py crashes - there's no internet (this usually means that the build process will still happen, the build just won't have current data.)
+query.py crashes - there's no internet or the pi failed to connect to it (this usually means that the build process will still happen, the build just won't have current data.)
 
 inotool crashes (can't find interface) - make sure the pi is plugged into the arduino.
 
 inotool crashes (during build process) - make sure query_results.txt exists
 
+Forms updating very slowly - make sure rotary encoders are plugged in.
+=====
 
-The script build_wo_query constructs, builds, and uploads phytos.ino without actually activating query.py.  This is mostly for debugging purposes since the queries take a while, but it can be used in production in a pinch since the data for query.py only changes daily, though, at that point, the arduino should have the same code as the version you're feeding it so it's kind of moot.  
-
-the command ino (from inotool) must be run in this directory and it's going to look for the src and lib directories, so I wouldn't change the directory structure too much unless you know what you're doing.  
