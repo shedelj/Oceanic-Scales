@@ -1,14 +1,6 @@
-int lapse_size = 279;
-int nitrate_lapse[279] = {
-33,31,31,32,33,49,50,60,46,43,40,34,37,40,41,43,38,39,39,38,34,31,31,30,28,29,30,28,31,31,15,15,15,26,27,28,29,25,22,27,29,29,29,29,28,28,26,26,28,40,59,51,41,41,37,35,15,15,15,15,15,15,15,15,15,15,15,15,15,59,62,15,220,15,15,15,255,204,187,15,224,213,180,207,15,15,15,15,15,15,15,15,15,15,17,16,13,13,13,15,14,15,15,95,86,76,71,72,75,68,49,53,42,39,51,50,51,49,118,105,128,104,136,121,160,157,140,151,157,139,137,103,111,15,115,88,97,120,121,126,91,59,52,48,53,58,53,47,50,44,43,65,60,95,15,138,15,167,157,143,146,117,98,75,64,61,64,65,61,59,57,46,45,43,33,36,39,34,31,32,34,33,26,35,27,25,25,22,18,18,18,24,21,20,19,17,39,31,19,20,16,14,17,15,15,18,18,17,16,17,19,19,25,31,24,20,20,18,18,20,20,18,16,16,14,14,17,18,21,24,26,24,29,23,17,13,12,12,15,0,15,15,15,15,15,15,15,13,22,22,18,16,16,19,24,27,28,33,30,29,29,27,26,27,24,18,23,21,24,24,21,18,20,25,28,23,20,20,19,};
-int temperature_lapse[279]= {
-234,215,213,205,208,189,185,190,191,187,188,174,168,167,168,174,180,183,178,179,166,155,155,166,169,167,168,169,165,175,176,176,172,134,136,140,154,159,150,138,134,129,122,115,113,104,105,118,129,142,152,158,151,158,154,149,147,137,130,127,125,122,122,118,117,119,133,132,136,142,137,134,136,121,121,124,126,130,132,131,141,145,142,144,0,119,108,110,119,122,122,133,148,155,161,161,164,163,159,156,150,153,141,140,138,142,147,156,162,159,160,159,155,155,161,165,164,157,176,163,172,164,162,162,170,178,171,173,177,182,190,185,182,184,174,183,201,202,212,226,232,211,206,193,193,192,195,189,184,182,192,197,181,170,177,209,206,200,196,199,213,203,214,203,197,212,229,234,214,183,200,204,210,215,200,196,209,227,217,217,213,211,192,177,171,170,184,191,191,207,211,204,209,213,209,194,207,199,201,190,208,206,215,218,227,234,244,228,226,229,235,235,217,188,191,193,179,172,201,207,213,226,225,224,221,209,210,200,193,204,222,228,228,216,222,230,225,220,209,222,228,227,227,235,234,232,240,237,225,232,232,236,232,224,215,222,210,209,226,225,238,245,252,255,249,250,252,252,246,241,226,220,217,207,226,246,245,240,237,};
-int ph_lapse[279] = {
-20,19,16,18,15,136,95,95,95,95,94,19,133,208,172,3,90,14,15,14,12,12,10,10,10,9,10,3,40,43,12,25,10,84,18,19,87,31,20,9,10,9,14,14,16,15,14,20,41,13,13,123,13,8,9,11,17,20,26,40,31,33,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,2,19,25,37,30,28,25,25,19,16,13,11,8,9,9,12,18,28,31,24,22,21,19,17,13,11,8,7,7,8,9,14,19,16,20,18,15,11,11,9,7,6,4,3,3,3,5,36,28,35,37,27,30,45,40,25,23,17,21,41,51,56,58,66,116,84,70,151,52,33,46,43,43,45,52,77,76,45,53,94,77,89,45,37,28,30,35,133,38,43,51,45,43,48,59,38,39,63,25,26,24,24,29,37,62,115,91,98,125,152,72,39,37,17,15,12,21,23,47,65,97,39,39,48,59,68,75,72,41,22,25,33,38,48,67,108,92,114,192,155,133,128,135,89,73,63,57,53,44,48,65,74,85,76,60,64,69,79,135,86,64,72,67,3,60,255,194,64,59,76,97,88,94,81,60,53,64,62,50,58,74,74,103,103,90,68,62,71,77,59,67,90,93,108,101,};
 
 #include <Adafruit_WS2801.h>
 #include "SPI.h"
-//#include "variables.h"
 
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
@@ -16,7 +8,7 @@ int ph_lapse[279] = {
 #define LIGHT_COUNT (129)
 #define DEVICE_ID (1)
 #define PARAMETER_MAX (255)
-#define START_VISUALIZE_TIME (40000)
+#define START_VISUALIZE_TIME (80000)
 
 #define PULSE_PIN 30
 #define REDWHITE_PIN 31
@@ -28,7 +20,6 @@ int ph_lapse[279] = {
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
-//int temperature_lapse[];
 /* 
 Arduino Mega SPI:
 52 - CLK
@@ -187,6 +178,8 @@ void visualize()
 
 boolean timelapse = false;
 float control = 0; 
+long prevtime = 0;
+
 float twinklecontroltemp = 0;
 float twinklecontrolph = 0;
 float twinklecontrolnitrate = 0;
@@ -246,14 +239,17 @@ void game()
        //if (i == 0) Serial.println(brightness); 
        break;
      case TEMPERATURE: 
-       brightness = get_brightness_chem(i);
+       brightness = get_brightness_chem(i);       
+       //strip.setPixelColor(i, 10, brightness, 255- brightness);
+
        strip.setPixelColor(i, brightness, 10, 255 - brightness);
        break;
-     case 2:
+     case PH:
        brightness = get_brightness_chem(i);    
-       //Serial.println(brightness);
+       if (i == 91) Serial.println(brightness);
+       strip.setPixelColor(i, 10,255 - brightness, brightness);
 
-       strip.setPixelColor(i, 10, brightness, 255- brightness);
+
        break;
        //uint8_t r = brightness;
        //uint8_t b = 255 - brightness
@@ -273,8 +269,9 @@ void game()
     }
     
   }
-
-   control = control + .0245;
+   long time = millis();
+   control += (time - prevtime) / 1650.0;
+   prevtime = time;
    if (control >= 1) 
    {
      control -= 1;
@@ -284,14 +281,16 @@ void game()
    else if(control >= .15){
     digitalWrite(30, LOW); 
    }
-   twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0);
+   //twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0);
+   twinklecontroltemp = twinklecontroltemp + .0845;
    if (abs(temperature.value - 127) > 110) twinklecontroltemp = twinklecontroltemp + ((temperature.value * 3) / 10000.0) * 2 ;
 
    if (twinklecontroltemp >= 1)
    {
      twinklecontroltemp -=1;
    }
-   twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0);
+   //twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0);
+   twinklecontrolph += .0845;
    if (abs(ph.value - 127) > 110) twinklecontrolph = twinklecontrolph + ((ph.value * 3) / 10000.0) * 2;
 
    if (twinklecontrolph >= 1)
@@ -589,10 +588,10 @@ void updateChem(int select){
   //Serial.println(disinteraction_time);
   float max_velocity = 2.0;
   if (disinteraction_time < disinteraction_limit){
-    if ((c->velocity - (weighted / 50.0)) < -max_velocity) {
+    if ((c->velocity - (weighted / 25.0)) < -max_velocity) {
         c->velocity = -max_velocity;
     }
-    else if ((c->velocity - (weighted / 50.0)) > max_velocity) {
+    else if ((c->velocity - (weighted / 25.0)) > max_velocity) {
         c->velocity = max_velocity;
     }
     else{
@@ -1114,7 +1113,7 @@ void init_leds()
       break;
     case 101:
       leds[i].y =   131;
-      leds[i].type = PLANKTON;
+      leds[i].type = PH;
       break;
     case 102:
       leds[i].y = 132;
@@ -1230,7 +1229,6 @@ void init_leds()
     else{
        leds[i].y = int(leds[i].y * 3); 
     }
-//NEXT TIME: OFFSET BLRUGH
   }
 
 }
