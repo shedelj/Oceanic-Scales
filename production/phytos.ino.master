@@ -14,13 +14,13 @@
 //pins for interacting with the swinging elements
 #define PULSE_PIN 30
 #define REDWHITE_PIN 31
-#define SYNC_PIN (32);
+#define SYNC_PIN (32)
 
 //height of the wall in mm according to paper map that Gene has (sorry)
 #define WINDOW_Y (800)
 
 //The maximum value for the "balance" variable.  128 * number of walls
-#define MAX_BALANCE(256)
+#define MAX_BALANCE (256)
 
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 
@@ -98,7 +98,7 @@ chem temperature;
 chem nitrogen;
 chem ph;
 
-
+void init_leds();
 
 void setup() {
   Serial.begin(9600);
@@ -183,8 +183,7 @@ void loop() {
 void visualize()
 {
    if (visualize_time == -1) visualize_time = millis();
-   int index = (int) (((mi
-    llis() - visualize_time) / 250) % lapse_size);
+   int index = (int) (((millis() - visualize_time) / 250) % lapse_size);
 
    int temperature_target = temperature_lapse[index];
    //int nitrogen_target = nitrogen_lapse[index];
@@ -421,11 +420,11 @@ uint8_t twinkle_value(int id)
 //I'm not sure if this is possible to use with the pi, since there's no arduino IDE.  
 //It should be theoretically possible but it's probably a bigger hassle than using a laptop.  
 void calibrate(){
-  wipe();
+  //wipe();
   for(int i = 0; i < LIGHT_COUNT; )
   {
     if(Serial.read() != -1){
-      wipe();
+      //wipe();
       strip.setPixelColor(i, 255,255,255);
       Serial.println(i);
 
@@ -470,6 +469,7 @@ void updateChem(int select){
 
   if(abs(weighted) > 1){
     disinteraction_time = 0; 
+  }
   else{
     if(select == 0) disinteraction_time += time - disinteraction_oldtime;
   }
