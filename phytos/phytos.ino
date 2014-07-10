@@ -8,8 +8,6 @@ int ph_lapse[279] = {
 
 #include <Adafruit_WS2801.h>
 #include "SPI.h"
-#include <Adafruit_NeoPixel.h>
-#include <EasyTransfer.h>
 
 //pins for controlling the light strip
 #define DATA_PIN (2)
@@ -31,20 +29,7 @@ int ph_lapse[279] = {
 //The maximum value for the "balance" variable.  128 * number of walls
 #define MAX_BALANCE (256)
 
-
-//FASTLED: For FastLED strip
-#define RING_PIN (8)
-
-EasyTransfer ET;
-
 Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
-
-struct SEND_DATA_STRUCTURE {
-  int temp;
-  int ph;
-};
-
-SEND_DATA_STRUCTURE ring_data;
 
 /* 
 Arduino Mega SPI:
@@ -124,7 +109,6 @@ void init_leds();
 
 void setup() {
   Serial.begin(9600);
-  Serial3.begin(9600);
 
   //initialize LEDS
   init_leds();
@@ -135,16 +119,9 @@ void setup() {
   pinMode(31, OUTPUT);
   pinMode(32, OUTPUT);
   pinMode(53, OUTPUT);
-  
-  //pin for sending temperature data to uno
-  ET.begin(details(ring_data), &Serial3);
-  //pinMode(14, OUTPUT);
 
   strip.begin();
   strip.show();
-  //ring.begin();
-  //ring.show();
-  //ring.setBrightness(20);
     
   temperature.value = 127;
   temperature.prev = 0;
@@ -187,11 +164,6 @@ void loop() {
   //checks rotary encoders, updates chems
   updateChem(0);
   updateChem(1);
-  
-  ring_data.temp = temperature.value;
-  ring_data.ph = ph.value; 
-  ET.sendData();
-
 
   //checks if the visualization should start and starts it.  
   if (disinteraction_time > START_VISUALIZE_TIME)
@@ -489,7 +461,13 @@ void updateChem(int select){
 
 
   int sensorValue = pulseIn(pin, HIGH);
-
+  //ls
+  Serial.println(sensorValue);
+  /*
+  if(select == 0){
+    Serial.println(sensorValue);
+  }
+  */
 
   c->diff = c->diff + (sensorValue - c->prev) ;
 
