@@ -206,7 +206,7 @@ void loop() {
       game();
       break;
     case CALIBRATE: 
-      Serial.println("calibrate!");
+      //Serial.println("calibrate!");
       calibrate();
       break;
   }
@@ -304,7 +304,7 @@ void game()
 
      case PH:
        brightness = get_brightness_chem(i);    
-       strip.setPixelColor(i, 10,255 - brightness, brightness);
+       strip.setPixelColor(i, 10,255, brightness);
        break;
 
      default:
@@ -461,14 +461,14 @@ void calibrate(){
     if(Serial.read() != -1){
       //wipe();
       strip.setPixelColor(i, 255,255,255);
-      Serial.println(i);
+      //Serial.println(i);
 
       ++i;
     }
     strip.show();
     delay(15); 
   }
-  Serial.println("calibration over");
+  //Serial.println("calibration over");
   state = 0;
 }
 
@@ -492,6 +492,8 @@ void updateChem(int select){
 
 
   c->diff = c->diff + (sensorValue - c->prev) ;
+  //Serial.print("c->diff = ");
+  //Serial.println(c->diff);
 
   //this is to handle the rotary encoder "rollover" behavior
   if (abs(c->diff) > 600) {
@@ -516,12 +518,18 @@ void updateChem(int select){
   if (disinteraction_time < disinteraction_limit){
     if ((c->velocity - (weighted / 25.0)) < -max_velocity) {
         c->velocity = -max_velocity;
+        //Serial.print("c->velocity0 = ");
+        //Serial.println(c->velocity);
     }
     else if ((c->velocity - (weighted / 25.0)) > max_velocity) {
         c->velocity = max_velocity;
+        //Serial.print("c->velocity1 = ");
+        //Serial.println(c->velocity);
     }
     else{
       c->velocity -= (weighted /50.0) ;
+      //Serial.print("c->velocity2 = ");
+      //Serial.println(c->velocity);
     }
   }
   //else set the value based on how to get it to go to neutral.
@@ -529,15 +537,15 @@ void updateChem(int select){
 
     int b = 127;
     if(c->value >= b){
-      c->velocity = -.2;
+      c->velocity = .2;
     }
     else{
-      c->velocity = .2; 
+      c->velocity = -.2; 
     }
   }
 
   //add velocity to the value
-  c->value += c->velocity;
+  c->value -= c->velocity;
   if(c->value > 255)
   {
 
@@ -1156,7 +1164,6 @@ void init_leds()
   }
 
 }
-
 
 
 

@@ -59,7 +59,7 @@ void loop(){
     
     while (iter_ph > 0) {
        if (iter_ph <= ph_leds_on) {
-         ph_ring.setPixelColor(iter_ph, 10 , 255 - (4 * ph_leds_on) , (4 * ph_leds_on));
+         ph_ring.setPixelColor(iter_ph, 10 , 255, (4 * ph_leds_on));
          ph_ring.show();
        }
        else { 
