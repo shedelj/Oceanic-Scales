@@ -4,18 +4,21 @@
 
 #define TEMP_RING_PIN (10)
 #define PH_RING_PIN (12)
+#define NITRO_RING_PIN (6)
 //create object
 EasyTransfer ET; 
 
 struct RECEIVE_DATA_STRUCTURE{
   int temp;
   int ph;
+  int nitrogen;
 };
 
 Adafruit_NeoPixel temp_ring = Adafruit_NeoPixel(60,TEMP_RING_PIN, NEO_GRB + NEO_KHZ800);
 
 Adafruit_NeoPixel ph_ring = Adafruit_NeoPixel(60,PH_RING_PIN, NEO_GRB + NEO_KHZ800);
 
+Adafruit_NeoPixel nitro_ring = Adafruit_NeoPixel(60,NITRO_RING_PIN, NEO_GRB + NEO_KHZ800);
 
 //give a name to the group of data
 RECEIVE_DATA_STRUCTURE ring_data;
@@ -33,6 +36,10 @@ void setup(){
   ph_ring.show();
   ph_ring.setBrightness(20);
   
+  nitro_ring.begin();
+  nitro_ring.show();
+  nitro_ring.setBrightness(20);
+  
 }
 
 void loop(){
@@ -41,8 +48,11 @@ void loop(){
     
     int temp_leds_on = ring_data.temp / 4;
     int ph_leds_on = ring_data.ph /4;
+    int nitro_leds_on = ring_data.nitrogen /4;
+    
     int iter_ph = 60;
     int iter_temp = 60;
+    int iter_nitro = 60;
     
     while (iter_temp > 0) {
        if (iter_temp <= temp_leds_on) {
@@ -66,6 +76,17 @@ void loop(){
          ph_ring.setPixelColor(iter_ph, 0, 0, 0);
        }
        iter_ph--;
+    }
+    
+    while (iter_nitro > 0) {
+       if (iter_nitro <= nitro_leds_on) {
+         nitro_ring.setPixelColor(iter_nitro, 255 - (2 * nitro_leds_on), 100 + (2 * nitro_leds_on) , 0);
+         nitro_ring.show();
+       }
+       else { 
+         nitro_ring.setPixelColor(iter_nitro, 0, 0, 0);
+       }
+       iter_nitro--;
     }
     
   }

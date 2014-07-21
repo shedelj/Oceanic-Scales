@@ -8,7 +8,7 @@
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (129)
+#define LIGHT_COUNT (160)
 
 //how much time after disinteraction until visualization starts in milliseconds
 #define START_VISUALIZE_TIME (80000)
@@ -35,6 +35,7 @@ Adafruit_WS2801 strip = Adafruit_WS2801(LIGHT_COUNT, DATA_PIN, CLOCK_PIN);
 struct SEND_DATA_STRUCTURE {
   int temp;
   int ph;
+  int nitrogen;
 };
 
 SEND_DATA_STRUCTURE ring_data;
@@ -149,9 +150,10 @@ void setup() {
   ph.diff = 0;
   ph.velocity = 0;
 
-
-
   nitrogen.value = 127;
+  nitrogen.prev = 0;
+  nitrogen.diff = 0;
+  nitrogen.velocity = 0;
   
   //SPI.begin();
 }
@@ -164,8 +166,8 @@ void setup() {
 void loop() {
 
  
-//  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
-  balance = abs(temperature.value - 127)  + abs(ph.value -127);
+  balance = abs(temperature.value - 127) + abs(nitrogen.value - 127)  + abs(ph.value -127);
+  //balance = abs(temperature.value - 127)  + abs(ph.value -127);
   
   //interacting with swinging forms
   if (balance < MAX_BALANCE / 2){
@@ -180,9 +182,11 @@ void loop() {
   //checks rotary encoders, updates chems
   updateChem(0);
   updateChem(1);
+  updateChem(2);
   
   ring_data.temp = temperature.value;
   ring_data.ph = ph.value; 
+  ring_data.nitrogen = nitrogen.value;
   ET.sendData();
 
 
@@ -214,14 +218,16 @@ void visualize()
    int index = (int) (((millis() - visualize_time) / 250) % lapse_size);
 
    int temperature_target = temperature_lapse[index];
-   //int nitrogen_target = nitrogen_lapse[index];
+   int nitrogen_target = nitrate_lapse[index];
    int ph_target = ph_lapse[index];
    
    temperature.velocity = 0;
    ph.velocity = 0;
+   nitrogen.velocity = 0;
 
    temperature.value +=   (temperature_target - temperature.value) / 5;
    ph.value += (ph_target - ph.value) / 5;
+   nitrogen.value += (nitrogen_target - nitrogen.value) / 5;
    
 }
 
@@ -299,6 +305,12 @@ void game()
        brightness = get_brightness_chem(i);    
        strip.setPixelColor(i, 10,255, brightness);
        break;
+       
+     case NITROGEN:
+       brightness = get_brightness_chem(i);
+       //green to orange
+       strip.setPixelColor(i, 255 - (brightness / 2) , 100 + (brightness / 2), 0);
+       break;
 
      default:
        break;
@@ -344,7 +356,14 @@ void game()
      twinklecontrolph -=1;
    }
 
-   
+   twinklecontrolnitrate = twinklecontrolnitrate += .0845;
+  if (abs(nitrogen.value - 127) > 110) twinklecontrolnitrate = twinklecontrolnitrate + ((nitrogen.value * 3) / 10000.0) * 2;
+  
+  if (twinklecontrolnitrate >= 1)
+  {
+     twinklecontrolnitrate -= 1;
+  }
+  
 }
 
 //computes whether a given led should die or not on a pass. 
@@ -420,7 +439,9 @@ uint8_t twinkle_value(int id)
 {
    double twinklecontrol = 0;
    if (id < 64) twinklecontrol = twinklecontroltemp;
-   else twinklecontrol = twinklecontrolph;
+   else if (id > 64 && id < 128) twinklecontrol = twinklecontrolph;
+   else twinklecontrol = twinklecontrolnitrate;
+   
    //Serial.println(twinklecontrol);
    switch(id % 5)
    {
@@ -478,6 +499,10 @@ void updateChem(int select){
   if (select == 1){
     pin = 48;
     c = &ph;
+  }
+  if (select == 2){
+    pin = 47;
+    c = &nitrogen;
   }
 
 
@@ -1139,7 +1164,142 @@ void init_leds()
     case 126:
       leds[i].y = 190;
       leds[i].type = PLANKTON;   
-  break;    
+    break;    
+ //dummy LED on back of 2nd wall   
+   case 127:
+      leds[i].y = 5;
+      leds[i].type = PLANKTON;
+   break; 
+    
+    //this is #1 on the new wall/sheet
+   case 128:
+      leds[i].y = 5;
+      leds[i].type = NITROGEN;
+   break;
+   case 129:
+      leds[i].y = 30;
+      leds[i].type = PLANKTON;
+   break;
+   case 130:
+      leds[i].y =38;
+      leds[i].type = NITROGEN;
+   break;
+   case 131:
+      leds[i].y = 80;
+      leds[i].type = NITROGEN;
+   break;
+   case 132:
+      leds[i].y = 125;
+      leds[i].type = NITROGEN;
+   break;
+   case 133:
+      leds[i].y = 130;
+      leds[i].type = PLANKTON;
+   break;
+   case 134:
+      leds[i].y = 91;
+      leds[i].type = PLANKTON;
+   break;
+   case 135:
+      leds[i].y = 33;
+      leds[i].type = PLANKTON;
+   break;
+   case 136:
+      leds[i].y = 5;
+      leds[i].type = NITROGEN;
+   break;
+   case 137:
+      leds[i].y = 5;
+      leds[i].type = PLANKTON;
+   break;
+   case 138:
+      leds[i].y = 29;
+      leds[i].type = NITROGEN;
+   break;
+   case 139:
+      leds[i].y = 55;
+      leds[i].type = NITROGEN;
+   break;
+   case 140:
+      leds[i].y = 96;
+      leds[i].type = NITROGEN;
+   break;
+   case 141:
+      leds[i].y = 93;
+      leds[i].type = NITROGEN;
+   break;
+   case 142:
+      leds[i].y = 126;
+      leds[i].type = NITROGEN;
+   break;
+   case 143:
+      leds[i].y = 130;
+      leds[i].type = PLANKTON;
+   break;
+   case 144:
+      leds[i].y = 170;
+      leds[i].type = NITROGEN;
+   break;
+   case 145:
+      leds[i].y = 195;
+      leds[i].type = PLANKTON;
+   break;
+   case 146:
+      leds[i].y = 230;
+      leds[i].type = NITROGEN;
+   break;
+   case 147:
+      leds[i].y = 246;
+      leds[i].type = PLANKTON;
+   break;
+   case 148:
+      leds[i].y = 265;
+      leds[i].type = NITROGEN;
+   break;
+   case 149:
+      leds[i].y = 260;
+      leds[i].type = NITROGEN;
+   break;
+   case 150:
+      leds[i].y = 244;
+      leds[i].type = NITROGEN;
+   break;
+   case 151:
+      leds[i].y = 190;
+      leds[i].type = PLANKTON;
+   break;
+   case 152:
+      leds[i].y = 155;
+      leds[i].type = PLANKTON;
+   break;
+   case 153:
+      leds[i].y = 151;
+      leds[i].type = NITROGEN;
+   break;
+   case 154:
+      leds[i].y = 161;
+      leds[i].type = PLANKTON;
+   break;
+   case 155:
+      leds[i].y = 186;
+      leds[i].type = NITROGEN;
+   break;
+   case 156:
+      leds[i].y = 188;
+      leds[i].type = NITROGEN;
+   break;
+   case 157:
+      leds[i].y = 225;
+      leds[i].type = PLANKTON;
+   break;
+   case 158:
+      leds[i].y = 237;
+      leds[i].type = NITROGEN;
+   break;
+   case 159:
+      leds[i].y = 255;
+      leds[i].type = PLANKTON;
+   break;
     default: 
       break;
     }    
