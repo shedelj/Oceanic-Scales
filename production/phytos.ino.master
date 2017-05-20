@@ -530,7 +530,7 @@ void updateChem(int select){
   }
   disinteraction_oldtime = time;
 
-  float max_velocity = 2.0;
+  float max_velocity = 0.50;
 
   //if the user is interacting with it, set the velocity based on rotary encoder input
   if (disinteraction_time < disinteraction_limit){
