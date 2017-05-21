@@ -1,3 +1,4 @@
+sleep 15
 python updated_query.py
 python updated_query.py > query_results.txt
 ino clean
