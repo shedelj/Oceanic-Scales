@@ -170,14 +170,14 @@ void loop() {
   //balance = abs(temperature.value - 127)  + abs(ph.value -127);
   
   //interacting with swinging forms
-  if (balance < MAX_BALANCE / 2){
-      digitalWrite(REDWHITE_PIN, HIGH);
-      digitalWrite(SYNC_PIN, HIGH);
-  }
-  else {
-      digitalWrite(REDWHITE_PIN, LOW);
-      digitalWrite(SYNC_PIN, LOW); 
-  }
+  //if (balance < MAX_BALANCE / 2){
+  //    digitalWrite(REDWHITE_PIN, HIGH);
+  //    digitalWrite(SYNC_PIN, HIGH);
+  //}
+  //else {
+  //    digitalWrite(REDWHITE_PIN, LOW);
+  //    digitalWrite(SYNC_PIN, LOW); 
+  //}
   
   //checks rotary encoders, updates chems
   updateChem(0);
@@ -603,12 +603,12 @@ void init_leds()
     case 2: 
       //leds[i].x = ;
       leds[i].y = 123;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 3: 
       //leds[i].x = 21;
       leds[i].y = 140;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 4: 
       //leds[i].x = 25;
@@ -618,7 +618,7 @@ void init_leds()
     case 5: 
       //leds[i].x = 27;
       leds[i].y = 69;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 6: 
       //leds[i].x = 23;
@@ -628,7 +628,7 @@ void init_leds()
     case 7: 
       //leds[i].x = 18;
       leds[i].y = 60;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 8: 
       //leds[i].x = 15;
@@ -638,7 +638,7 @@ void init_leds()
     case 9: 
       //leds[i].x = 4;
       leds[i].y = 20;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 10: 
       //leds[i].x = 11;
@@ -658,7 +658,7 @@ void init_leds()
     case 13: 
       //leds[i].x = 21;
       leds[i].y = 140;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 14: 
       //leds[i].x = 19;
@@ -673,12 +673,12 @@ void init_leds()
     case 16: 
       //leds[i].x = 15;
       leds[i].y = 166;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 17: 
       //leds[i].x = 5;
       leds[i].y = 179;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 18: 
       //leds[i].x = 4;
@@ -693,7 +693,7 @@ void init_leds()
     case 20: 
       //leds[i].x = 14;
       leds[i].y = 274;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 21: 
       //leds[i].x = 8;
@@ -728,22 +728,22 @@ void init_leds()
     case 27: 
       //leds[i].x = 12;
       leds[i].y = 200;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 28: 
       //leds[i].x = 3;
       leds[i].y = 198;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 29: 
       //leds[i].x = 12;
       leds[i].y = 171;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 30: 
       //leds[i].x = 4;
       leds[i].y = 225;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 31: 
       //leds[i].x = 4;
@@ -753,17 +753,17 @@ void init_leds()
     case 32: 
       //leds[i].x = 11;
       leds[i].y = 55;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 33: 
       //leds[i].x = 18;
       leds[i].y = 90;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 34: 
       //leds[i].x = 17;
       leds[i].y = 110;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 35: 
       //leds[i].x = 22;
@@ -773,22 +773,22 @@ void init_leds()
     case 36: 
       //leds[i].x = 22;
       leds[i].y = 170;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 37: 
       //leds[i].x = 22;
       leds[i].y = 131;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 38: 
       //leds[i].x = 22;
       leds[i].y = 93;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 39: 
       //leds[i].x = 22;
       leds[i].y = 52;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break; 
     case 40: 
       //leds[i].x = 22;
@@ -798,7 +798,7 @@ void init_leds()
     case 41: 
       //leds[i].x = 22;
       leds[i].y = 111;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 42: 
       //leds[i].x = 22;
@@ -813,17 +813,17 @@ void init_leds()
     case 44: 
       //leds[i].x = 22;
       leds[i].y = 118;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 45: 
       //leds[i].x = 22;
       leds[i].y = 154;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 46: 
       //leds[i].x = 22;
       leds[i].y = 140;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 47: 
       //leds[i].x = 22;
@@ -834,7 +834,7 @@ void init_leds()
     case 48: 
       //leds[i].x = 22;
       leds[i].y = 55;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 49: 
       //leds[i].x = 22;
@@ -849,12 +849,12 @@ void init_leds()
     case 51: 
       //leds[i].x = 22;
       leds[i].y = 129;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 52: 
       //leds[i].x = 22;
       leds[i].y = 160;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 53: 
       //leds[i].x = 22;
@@ -874,7 +874,7 @@ void init_leds()
     case 56: 
       //leds[i].x = 22;
       leds[i].y = 49;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     //case 96: THERE'S NOTHING HERE
     case 57: 
@@ -885,32 +885,32 @@ void init_leds()
     case 58: 
       //leds[i].x = 22;
       leds[i].y = 148;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 59: 
       //leds[i].x = 22;
       leds[i].y = 125;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 60: 
       //leds[i].x = 22;
       leds[i].y = 78;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 61: 
       //leds[i].x = 22;
       leds[i].y = 53;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 62: 
       //leds[i].x = 22;
       leds[i].y = 127;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 63: 
       //leds[i].x = 22;
       leds[i].y = 170;
-      leds[i].type = TEMPERATURE;
+      leds[i].type = PLANKTON;
       break;
     case 64:
       leds[i].y = 23;
