@@ -869,7 +869,7 @@ void init_leds()
     case 55: 
       //leds[i].x = 22;
       leds[i].y = 73;
-      leds[i].type = PLANKTON;
+      leds[i].type = TEMPERATURE;
       break;
     case 56: 
       //leds[i].x = 22;
