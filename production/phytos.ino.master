@@ -109,6 +109,8 @@ unsigned long disinteraction_oldtime = 0;
 //how long into disinteraction until the system starts resetting itself
 unsigned long disinteraction_limit = 15000;  //milliseconds
 
+//system recovery mode - used to ignore input from encoders until balanced
+unsigned int recovery = 0;
 
 chem temperature;
 chem nitrogen;
@@ -475,8 +477,22 @@ void calibrate(){
     if(Serial.read() != -1){
       //wipe();
       strip.setPixelColor(i, 255,255,255);
-      //Serial.println(i);
-
+      Serial.print(i);
+      Serial.print(" - ");
+      switch (leds[i].type) {
+        case PLANKTON: 
+          Serial.println("PLANKTON");
+          break;
+        case PH:
+          Serial.println("PH");
+          break;
+        case NITROGEN:
+          Serial.println("NITROGEN");
+          break;
+        case TEMPERATURE:
+          Serial.println("TEMPERATURE");
+          break;
+      }
       ++i;
     }
     strip.show();
@@ -505,9 +521,7 @@ void updateChem(int select){
     c = &nitrogen;
   }
 
-
   int sensorValue = pulseIn(pin, HIGH);
-
 
   c->diff = c->diff + (sensorValue - c->prev) ;
   //Serial.print("c->diff = ");
@@ -519,7 +533,8 @@ void updateChem(int select){
   }
 
   float weighted = c->diff / 25.0;
-  
+  if (abs(weighted) < 1) weighted = 0; //ignore values that are less than 0
+
   unsigned long time = millis();
 
   if(abs(weighted) > 1){
@@ -532,8 +547,20 @@ void updateChem(int select){
 
   float max_velocity = 0.50;
 
-  //if the user is interacting with it, set the velocity based on rotary encoder input
-  if (disinteraction_time < disinteraction_limit){
+  //If the system crashes, enter recovery which prevents the user from input
+  if (living_count <= 1)
+  {
+    recovery = 1;
+  }
+
+  //Exit recovery mode when there are at least 100 alive
+  if (living_count > 100 && recovery == 1) {
+    recovery = 0;
+  }
+
+  //if the user is interacting with it, set the velocity based on rotary encoder input.
+  //ignore input if system is recovering
+  if ((disinteraction_time < disinteraction_limit) && recovery != 1) {
     if ((c->velocity - (weighted / 25.0)) < -max_velocity) {
         c->velocity = -max_velocity;
         //Serial.print("c->velocity0 = ");
@@ -552,13 +579,12 @@ void updateChem(int select){
   }
   //else set the value based on how to get it to go to neutral.
   else{
-
     int b = 127;
     if(c->value >= b){
-      c->velocity = .2;
+      c->velocity = .5; //was originally .2, but want faster recovery
     }
     else{
-      c->velocity = -.2; 
+      c->velocity = -.5; 
     }
   }
 
@@ -568,16 +594,13 @@ void updateChem(int select){
   {
 
     c->value = 255;
-    //c->velocity = 0; 
   }
   if(c->value < 0)
   {
     c->value = 0; 
-    //c->velocity = 0;
   }
   
   c->diff = c->diff / 8; 
-  
   c->prev = sensorValue;
 }
 
@@ -912,22 +935,22 @@ void init_leds()
       leds[i].y = 170;
       leds[i].type = PLANKTON;
       break;
+//Wall 2
     case 64:
       leds[i].y = 23;
       leds[i].type = PLANKTON; 
             break;
-
     case 65:
       leds[i].y = 23;
       leds[i].type = PH;
       break;
     case 66:
-      leds[i].y = 43;
-      leds[i].type = PLANKTON; 
-      break;
-    case 67:
       leds[i].y = 23;
       leds[i].type = PH;
+      break;
+    case 67:
+      leds[i].y = 43;
+      leds[i].type = PLANKTON;
       break;
     case 68:
       leds[i].y = 23;
@@ -947,7 +970,7 @@ void init_leds()
       break;
     case 72:
       leds[i].y = 35;
-      leds[i].type = PLANKTON;
+      leds[i].type = PLANKTON; 
       break;
     case 73:
       leds[i].y = 50;
