@@ -8,7 +8,7 @@
 #define DATA_PIN (2)
 #define CLOCK_PIN (3)
 
-#define LIGHT_COUNT (160)
+#define LIGHT_COUNT (159)
 
 //how much time after disinteraction until visualization starts in milliseconds
 #define START_VISUALIZE_TIME (80000)
@@ -669,657 +669,652 @@ void init_leds()
       leds[i].type = TEMPERATURE;
       break;
     case 11: 
-      //leds[i].x = 13;
-      leds[i].y = 55;
-      leds[i].type = PLANKTON;
-      break;
-    case 12: 
       //leds[i].x = 22;
       leds[i].y = 89;
       leds[i].type = TEMPERATURE;
       break;
-    case 13: 
+    case 12: 
       //leds[i].x = 21;
       leds[i].y = 140;
       leds[i].type = PLANKTON;
       break;
-    case 14: 
+    case 13: 
       //leds[i].x = 19;
       leds[i].y = 123;
       leds[i].type = PLANKTON;
       break;
-    case 15: 
+    case 14: 
       //leds[i].x = 14;
       leds[i].y = 132;
       leds[i].type = TEMPERATURE;
       break;
-    case 16: 
+    case 15: 
       //leds[i].x = 15;
       leds[i].y = 166;
       leds[i].type = TEMPERATURE;
       break;
-    case 17: 
+    case 16: 
       //leds[i].x = 5;
       leds[i].y = 179;
       leds[i].type = PLANKTON;
       break;
-    case 18: 
+    case 17: 
       //leds[i].x = 4;
       leds[i].y = 204;
       leds[i].type = TEMPERATURE;
       break;
-    case 19: 
+    case 18: 
       //leds[i].x = 14;
       leds[i].y = 235;
       leds[i].type = PLANKTON;
       break;
-    case 20: 
+    case 19: 
       //leds[i].x = 14;
       leds[i].y = 274;
       leds[i].type = PLANKTON;
       break;
-    case 21: 
+    case 20: 
       //leds[i].x = 8;
       leds[i].y = 251;
       leds[i].type = TEMPERATURE;
       break;
-    case 22: 
+    case 21: 
       //leds[i].x = 3;
       leds[i].y = 280;
       leds[i].type = PLANKTON;
       break;
-    case 23: 
+    case 22: 
       //leds[i].x = 7;
       leds[i].y = 290;
       leds[i].type = TEMPERATURE;
       break;
-    case 24: 
+    case 23: 
       //leds[i].x = 23;
       leds[i].y = 263;
       leds[i].type = PLANKTON;
       break;
-    case 25: 
+    case 24: 
       //leds[i].x = 18;
       leds[i].y = 228;
       leds[i].type = TEMPERATURE;
       break;
-    case 26: 
+    case 25: 
       //leds[i].x = 13;
       leds[i].y = 235;
       leds[i].type = PLANKTON;
       break;
-    case 27: 
+    case 26: 
       //leds[i].x = 12;
       leds[i].y = 200;
       leds[i].type = TEMPERATURE;
       break;
-    case 28: 
+    case 27: 
       //leds[i].x = 3;
       leds[i].y = 198;
       leds[i].type = PLANKTON;
       break;
-    case 29: 
+    case 28: 
       //leds[i].x = 12;
       leds[i].y = 171;
       leds[i].type = TEMPERATURE;
       break;
-    case 30: 
+    case 29: 
       //leds[i].x = 4;
       leds[i].y = 225;
       leds[i].type = PLANKTON;
       break;
-    case 31: 
+    case 30: 
       //leds[i].x = 4;
       leds[i].y = 275;
       leds[i].type = TEMPERATURE;
       break;
-    case 32: 
+    case 31: 
       //leds[i].x = 11;
       leds[i].y = 55;
       leds[i].type = TEMPERATURE;
       break;
-    case 33: 
+    case 32: 
       //leds[i].x = 18;
       leds[i].y = 90;
       leds[i].type = PLANKTON;
       break;
-    case 34: 
+    case 33: 
       //leds[i].x = 17;
       leds[i].y = 110;
       leds[i].type = PLANKTON;
       break;
-    case 35: 
+    case 34: 
       //leds[i].x = 22;
       leds[i].y = 157;
       leds[i].type = TEMPERATURE;
       break;
-    case 36: 
+    case 35: 
       //leds[i].x = 22;
       leds[i].y = 170;
       leds[i].type = TEMPERATURE;
       break;
-    case 37: 
+    case 36: 
       //leds[i].x = 22;
       leds[i].y = 131;
       leds[i].type = TEMPERATURE;
       break;
-    case 38: 
+    case 37: 
       //leds[i].x = 22;
       leds[i].y = 93;
       leds[i].type = TEMPERATURE;
       break;
-    case 39: 
+    case 38: 
       //leds[i].x = 22;
       leds[i].y = 52;
       leds[i].type = PLANKTON;
       break; 
-    case 40: 
+    case 39: 
       //leds[i].x = 22;
       leds[i].y = 58;
       leds[i].type = TEMPERATURE;
       break;
-    case 41: 
+    case 40: 
       //leds[i].x = 22;
       leds[i].y = 111;
       leds[i].type = TEMPERATURE;
       break;
-    case 42: 
+    case 41: 
       //leds[i].x = 22;
       leds[i].y = 51;
       leds[i].type = PLANKTON;
       break;
-    case 43: 
+    case 42: 
       //leds[i].x = 22;
       leds[i].y = 78;
       leds[i].type = TEMPERATURE;
       break;
-    case 44: 
+    case 43: 
       //leds[i].x = 22;
       leds[i].y = 118;
       leds[i].type = PLANKTON;
       break;
-    case 45: 
+    case 44: 
       //leds[i].x = 22;
       leds[i].y = 154;
       leds[i].type = TEMPERATURE;
       break;
-    case 46: 
+    case 45: 
       //leds[i].x = 22;
       leds[i].y = 140;
       leds[i].type = PLANKTON;
       break;
-    case 47: 
+    case 46: 
       //leds[i].x = 22;
       leds[i].y = 167;
       leds[i].type = TEMPERATURE;
       break;
     //case 96: THERE'S NOTHING HERE
-    case 48: 
+    case 47: 
       //leds[i].x = 22;
       leds[i].y = 55;
       leds[i].type = PLANKTON;
       break;
-    case 49: 
+    case 48: 
       //leds[i].x = 22;
       leds[i].y = 88;
       leds[i].type = TEMPERATURE;
       break;
-    case 50: 
+    case 49: 
       //leds[i].x = 22;
       leds[i].y = 98;
       leds[i].type = PLANKTON;
       break;
-    case 51: 
+    case 50: 
       //leds[i].x = 22;
       leds[i].y = 129;
       leds[i].type = PLANKTON;
       break;
-    case 52: 
+    case 51: 
       //leds[i].x = 22;
       leds[i].y = 160;
       leds[i].type = TEMPERATURE;
       break;
-    case 53: 
+    case 52: 
       //leds[i].x = 22;
       leds[i].y = 167;
       leds[i].type = TEMPERATURE;
       break;
-    case 54: 
+    case 53: 
       //leds[i].x = 22;
       leds[i].y = 121;
       leds[i].type = PLANKTON;
       break;
-    case 55: 
+    case 54: 
       //leds[i].x = 22;
       leds[i].y = 73;
       leds[i].type = TEMPERATURE;
       break;
-    case 56: 
+    case 55: 
       //leds[i].x = 22;
       leds[i].y = 49;
       leds[i].type = PLANKTON;
       break;
     //case 96: THERE'S NOTHING HERE
-    case 57: 
+    case 56: 
       //leds[i].x = 22;
       leds[i].y = 104;
       leds[i].type = TEMPERATURE;
       break;
-    case 58: 
+    case 57: 
       //leds[i].x = 22;
       leds[i].y = 148;
       leds[i].type = TEMPERATURE;
       break;
-    case 59: 
+    case 58: 
       //leds[i].x = 22;
       leds[i].y = 125;
       leds[i].type = PLANKTON;
       break;
-    case 60: 
+    case 59: 
       //leds[i].x = 22;
       leds[i].y = 78;
       leds[i].type = PLANKTON;
       break;
-    case 61: 
+    case 60: 
       //leds[i].x = 22;
       leds[i].y = 53;
       leds[i].type = TEMPERATURE;
       break;
-    case 62: 
+    case 61: 
       //leds[i].x = 22;
       leds[i].y = 127;
       leds[i].type = TEMPERATURE;
       break;
-    case 63: 
+    case 62: 
       //leds[i].x = 22;
       leds[i].y = 170;
       leds[i].type = PLANKTON;
       break;
 //Wall 2
+    case 63:
+      leds[i].y = 23;
+      leds[i].type = TEMPERATURE; 
+            break;
     case 64:
       leds[i].y = 23;
-      leds[i].type = PLANKTON; 
-            break;
+      leds[i].type = PH;
+      break;
     case 65:
       leds[i].y = 23;
       leds[i].type = PH;
       break;
     case 66:
-      leds[i].y = 23;
+      leds[i].y = 43;
       leds[i].type = PH;
       break;
     case 67:
-      leds[i].y = 43;
-      leds[i].type = PLANKTON;
+      leds[i].y = 23;
+      leds[i].type = PLANKTON;   
       break;
     case 68:
-      leds[i].y = 23;
-      leds[i].type = PH;   
-      break;
-    case 69:
       leds[i].y = 40;
       leds[i].type = PH;
       break;
-    case 70:
+    case 69:
       leds[i].y = 28;
-      leds[i].type = PH;  
+      leds[i].type = PLANKTON;  
+      break;
+    case 70:
+      leds[i].y = 29;
+      leds[i].type = PH;
       break;
     case 71:
-      leds[i].y = 29;
-      leds[i].type = PLANKTON;
-      break;
-    case 72:
       leds[i].y = 35;
       leds[i].type = PLANKTON; 
       break;
-    case 73:
+    case 72:
       leds[i].y = 50;
-      leds[i].type = PH;
+      leds[i].type = PLANKTON;
       break;
-    case 74:
+    case 73:
       leds[i].y = 56;
       leds[i].type = PLANKTON;
       break;
-    case 75:
+    case 74:
       leds[i].y = 49;
       leds[i].type = PH;
       break;
-    case 76:
+    case 75:
       leds[i].y = 52;
+      leds[i].type = PH;
+      break;
+    case 76:
+      leds[i].y = 51;
       leds[i].type = PLANKTON;
       break;
     case 77:
-      leds[i].y = 51;
-      leds[i].type = PH;
-      break;
-    case 78:
       leds[i].y = 56;
       leds[i].type = PH;
       break;
-    case 79:
+    case 78:
       leds[i].y = 50;
       leds[i].type = PLANKTON;
       break;
-    case 80:
+    case 79:
       leds[i].y = 53;
       leds[i].type = PH;
       break;
-    case 81:
+    case 80:
       leds[i].y = 75;
       leds[i].type = PLANKTON;
       break;
-    case 82:
+    case 81:
       leds[i].y = 66;
       leds[i].type = PH;
+      break;
+    case 82:
+      leds[i].y = 66;
+      leds[i].type = PLANKTON;
       break;
     case 83:
       leds[i].y = 66;
-      leds[i].type = PLANKTON;
-      break;
-    case 84:
-      leds[i].y = 66;
       leds[i].type = PH;
       break;
-    case 85:
+    case 84:
       leds[i].y = 77;
       leds[i].type = PH;   
      break; 
-    case 86:
+    case 85:
       leds[i].y = 89;
       leds[i].type = PH;
       break;
-    case 87:
+    case 86:
       leds[i].y = 100;
       leds[i].type = PLANKTON;
       break;
-    case 88:
+    case 87:
       leds[i].y = 113;
       leds[i].type = PH;
       break;
-    case 89:
+    case 88:
       leds[i].y = 103;
       leds[i].type = PH;
       break;
-    case 90:
+    case 89:
       leds[i].y = 91;
       leds[i].type = PLANKTON;  
      break; 
-    case 91:
+    case 90:
       leds[i].y = 105;
       leds[i].type = PH;
       break;
-    case 92:
+    case 91:
       leds[i].y = 99;
       leds[i].type = PH;
       break;
-    case 93:
+    case 92:
       leds[i].y = 105;
       leds[i].type = PLANKTON;  
       break;
-    case 94:
+    case 93:
       leds[i].y = 105;
       leds[i].type = PH;
       break;
-    case 95:
+    case 94:
       leds[i].y = 100;
       leds[i].type = PLANKTON;
       break;
-    case 96:
+    case 95:
       leds[i].y = 131;
       leds[i].type = PH;
       break;
-    case 97:
+    case 96:
       leds[i].y = 135;
       leds[i].type = PH;
       break;
-    case 98:
+    case 97:
       leds[i].y = 149;
       leds[i].type = PLANKTON;
       break;
-    case 99:
+    case 98:
       leds[i].y = 133;
       leds[i].type = PH;      
       break;
-    case 100:
+    case 99:
       leds[i].y = 130;
       leds[i].type = PLANKTON;
       break;
-    case 101:
+    case 100:
       leds[i].y =   131;
       leds[i].type = PH;
       break;
-    case 102:
+    case 101:
       leds[i].y = 132;
       leds[i].type = PLANKTON; 
       break;
-    case 103:
+    case 102:
       leds[i].y = 146;
       leds[i].type = PH;
       break;
-    case 104:
+    case 103:
       leds[i].y = 148;
       leds[i].type = PLANKTON;  
       break;
-    case 105:
+    case 104:
       leds[i].y = 161;
       leds[i].type = PH;
       break;
-    case 106:
+    case 105:
       leds[i].y = 171;
       leds[i].type = PLANKTON;
       break;
-    case 107:
+    case 106:
       leds[i].y = 170;
       leds[i].type = PH;   
       break;
-    case 108:
+    case 107:
       leds[i].y = 162;
       leds[i].type = PLANKTON; 
       break;
-    case 109:
+    case 108:
       leds[i].y = 150;
       leds[i].type = PH;
       break;
-    case 110:
+    case 109:
       leds[i].y = 172;
       leds[i].type = PH;
       break;
-    case 111:
+    case 110:
       leds[i].y = 161;
       leds[i].type = PLANKTON;
       break;
-    case 112:
+    case 111:
       leds[i].y = 212;
       leds[i].type = PLANKTON;   
      break; 
-    case 113:
+    case 112:
       leds[i].y = 231;
       leds[i].type = PH;
       break;
-    case 114:
+    case 113:
       leds[i].y = 240;
       leds[i].type = PLANKTON;
       break;
-    case 115:
+    case 114:
       leds[i].y = 228;
       leds[i].type = PLANKTON;
       break;
-    case 116:
+    case 115:
       leds[i].y = 227;
       leds[i].type = PH;
       break;
-    case 117:
+    case 116:
       leds[i].y = 237;
       leds[i].type = PLANKTON;   
     break;  
-    case 118:
+    case 117:
       leds[i].y = 235;
       leds[i].type = PH;
       break;
-    case 119:
+    case 118:
       leds[i].y = 211;
       leds[i].type = PLANKTON;  
       break;
-    case 120:
+    case 119:
       leds[i].y = 191;
       leds[i].type = PH;
       break;
-    case 121:
+    case 120:
       leds[i].y = 198;
       leds[i].type = PH;
       break;
-    case 122:
+    case 121:
       leds[i].y = 191;
       leds[i].type = PLANKTON;
       break;
-    case 123:
+    case 122:
       leds[i].y = 196;
       leds[i].type = PH;
       break;
-    case 124:
+    case 123:
       leds[i].y = 192;
       leds[i].type = PH;
       break;
-    case 125:
+    case 124:
       leds[i].y = 208;
       leds[i].type = PH;
       break;
-    case 126:
+    case 125:
       leds[i].y = 190;
       leds[i].type = PLANKTON;   
     break;    
  //dummy LED on back of 2nd wall   
-   case 127:
+   case 126:
       leds[i].y = 5;
       leds[i].type = PLANKTON;
    break; 
     
     //this is #1 on the new wall/sheet
-   case 128:
+   case 127:
       leds[i].y = 5;
       leds[i].type = NITROGEN;
    break;
-   case 129:
+   case 128:
       leds[i].y = 30;
       leds[i].type = PLANKTON;
    break;
-   case 130:
+   case 129:
       leds[i].y =38;
       leds[i].type = NITROGEN;
    break;
-   case 131:
+   case 130:
       leds[i].y = 80;
       leds[i].type = NITROGEN;
    break;
-   case 132:
+   case 131:
       leds[i].y = 125;
       leds[i].type = NITROGEN;
    break;
-   case 133:
+   case 132:
       leds[i].y = 130;
       leds[i].type = PLANKTON;
    break;
-   case 134:
+   case 133:
       leds[i].y = 91;
       leds[i].type = PLANKTON;
    break;
-   case 135:
+   case 134:
       leds[i].y = 33;
       leds[i].type = PLANKTON;
    break;
-   case 136:
+   case 135:
       leds[i].y = 5;
       leds[i].type = NITROGEN;
    break;
-   case 137:
+   case 136:
       leds[i].y = 5;
       leds[i].type = PLANKTON;
    break;
-   case 138:
+   case 137:
       leds[i].y = 29;
       leds[i].type = NITROGEN;
    break;
-   case 139:
+   case 138:
       leds[i].y = 55;
       leds[i].type = NITROGEN;
    break;
-   case 140:
+   case 139:
       leds[i].y = 96;
       leds[i].type = NITROGEN;
    break;
-   case 141:
+   case 140:
       leds[i].y = 93;
       leds[i].type = NITROGEN;
    break;
-   case 142:
+   case 141:
       leds[i].y = 126;
       leds[i].type = NITROGEN;
    break;
-   case 143:
+   case 142:
       leds[i].y = 130;
       leds[i].type = PLANKTON;
    break;
-   case 144:
+   case 143:
       leds[i].y = 170;
       leds[i].type = NITROGEN;
    break;
-   case 145:
+   case 144:
       leds[i].y = 195;
       leds[i].type = PLANKTON;
    break;
-   case 146:
+   case 145:
       leds[i].y = 230;
       leds[i].type = NITROGEN;
    break;
-   case 147:
+   case 146:
       leds[i].y = 246;
       leds[i].type = PLANKTON;
    break;
-   case 148:
+   case 147:
       leds[i].y = 265;
       leds[i].type = NITROGEN;
    break;
-   case 149:
+   case 148:
       leds[i].y = 260;
       leds[i].type = NITROGEN;
    break;
-   case 150:
+   case 149:
       leds[i].y = 244;
       leds[i].type = NITROGEN;
    break;
-   case 151:
+   case 150:
       leds[i].y = 190;
       leds[i].type = PLANKTON;
    break;
-   case 152:
+   case 151:
       leds[i].y = 155;
       leds[i].type = PLANKTON;
    break;
-   case 153:
+   case 152:
       leds[i].y = 151;
       leds[i].type = NITROGEN;
    break;
-   case 154:
+   case 153:
       leds[i].y = 161;
       leds[i].type = PLANKTON;
    break;
-   case 155:
+   case 154:
       leds[i].y = 186;
       leds[i].type = NITROGEN;
    break;
-   case 156:
+   case 155:
       leds[i].y = 188;
       leds[i].type = NITROGEN;
    break;
-   case 157:
+   case 156:
       leds[i].y = 225;
       leds[i].type = PLANKTON;
    break;
-   case 158:
+   case 157:
       leds[i].y = 237;
       leds[i].type = NITROGEN;
    break;
-   case 159:
+   case 158:
       leds[i].y = 255;
       leds[i].type = PLANKTON;
    break;
