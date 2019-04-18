@@ -202,9 +202,9 @@ void loop() {
   {
     updateViz(0);
     visualize();
-  } else if (abs(balance) < 100) {
+  } else if (abs(balance) < 200) {
     updateViz(1);
-  } else if (abs(balance) > 100) {
+  } else if (abs(balance) > 200) {
     updateViz(2);
   }
   
@@ -572,7 +572,7 @@ void updateChem(int select){
   }
   disinteraction_oldtime = time;
 
-  float max_velocity = 0.50;
+  float max_velocity = 0.40;
 
   //If the system crashes, enter recovery which prevents the user from input
   if (living_count <= 1)
@@ -588,6 +588,13 @@ void updateChem(int select){
   //if the user is interacting with it, set the velocity based on rotary encoder input.
   //ignore input if system is recovering
   if ((disinteraction_time < disinteraction_limit) && recovery != 1) {
+    
+    if (balance > 240) {
+      max_velocity = 0.05;
+    } else {
+      max_velocity = 0.40;
+    }
+
     if ((c->velocity - (weighted / 25.0)) < -max_velocity) {
         c->velocity = -max_velocity;
         //Serial.print("c->velocity0 = ");
